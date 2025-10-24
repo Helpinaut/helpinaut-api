@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String     @id @default(uuid())
+  email     String     @unique
+  username  String     @unique
+  password  String
+  adverts   Advert[]
+  favorites Favorite[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model Advert {
+  id          String     @id @default(uuid())
+  title       String
+  description String
+  price       Int
+  category    Category
+  offer       Boolean
+  photo       String?
+  favorite    Favorite[]
+  status      Status     @default(ACTIVE)
+  owner       User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId     String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Favorite {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  advert    Advert   @relation(fields: [advertId], references: [id])
+  advertId  String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, advertId])
+}
+
+enum Category {
+  BEAUTY_SERVICES
+  CARING
+  CARPENTRY
+  CLEANING
+  ELECTRICIAN
+  GARDENING
+  PAINTING
+  PERSONAL_TRAINING
+  PETS
+  PLUMBING
+  PRIVATE_CLASSES
+  REPAIRS
+  RESTORATION
+  TECHNOLOGY
+  TRANSPORT
+  VIDEO_AND_PHOTOGRAPHY
+}
+
+enum Status {
+  ACTIVE
+  RESERVED
+  COMPLETED
+  ARCHIVED
+}
