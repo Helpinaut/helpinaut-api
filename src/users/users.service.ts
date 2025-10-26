@@ -21,7 +21,17 @@ export class UsersService {
    * @returns
    */
   findAll() {
-    return this.prisma.user.findMany();
+    return this.prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        // adverts: true,
+        // favorites: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
   }
 
   /**
@@ -30,7 +40,18 @@ export class UsersService {
    * @returns
    */
   findOne(id: string) {
-    return this.prisma.user.findUnique({ where: { id } });
+    return this.prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        adverts: true,
+        favorites: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
   }
 
   /**
