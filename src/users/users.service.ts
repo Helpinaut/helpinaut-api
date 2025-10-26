@@ -40,7 +40,7 @@ export class UsersService {
    * @returns
    */
   findOne(id: string) {
-    return this.prisma.user.findUnique({
+    return this.prisma.user.findUniqueOrThrow({
       where: { id },
       select: {
         id: true,
