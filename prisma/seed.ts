@@ -1,4 +1,5 @@
 import { PrismaClient, Category } from '@prisma/client';
+import { hash } from 'bcrypt';
 
 const prisma = new PrismaClient();
 
@@ -20,7 +21,7 @@ async function main() {
     create: {
       email: 'john.doe@email.com',
       username: 'john',
-      password: '123456',
+      password: await hash('12345678', 12),
     },
   });
   const jane = await prisma.user.upsert({
@@ -29,7 +30,7 @@ async function main() {
     create: {
       email: 'jane.doe@email.com',
       username: 'jane',
-      password: '123456',
+      password: await hash('12345678', 12),
     },
   });
   console.log(`Inserted ${await prisma.user.count()} users`);
