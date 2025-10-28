@@ -2,11 +2,13 @@ import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
-import { PrismaClientExceptionFilter } from './prisma-client-exception.filter';
+import { PrismaClientExceptionFilter } from './utils/prisma-client-exception.filter';
+import { JwtAuthGuard } from './auth/guard/jwt-auth.guard';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const port = process.env.PORT ?? 3000;
+  const jwtAuthGuard = app.get(JwtAuthGuard);
 
   app.setGlobalPrefix('api');
 
@@ -16,6 +18,15 @@ async function bootstrap() {
       'REST API Documentation for Helpinaut. Built with NestJS, Prisma and PostgreSQL.',
     )
     .setVersion('0.1')
+    .addBearerAuth({
+      type: 'http',
+      scheme: 'bearer',
+      bearerFormat: 'JWT',
+      in: 'header',
+      name: 'Authorization',
+      description: 'Enter your Bearer token',
+    })
+    .addSecurityRequirements('bearer')
     .build();
   const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
 
@@ -32,6 +43,7 @@ async function bootstrap() {
     }),
   );
   app.useGlobalFilters(new PrismaClientExceptionFilter());
+  app.useGlobalGuards(jwtAuthGuard);
 
   await app.listen(port, () => {
     console.log(`Helpinaut API running in port ${port}`);
