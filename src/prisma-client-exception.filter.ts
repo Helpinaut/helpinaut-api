@@ -1,7 +1,7 @@
 import {
   ArgumentsHost,
-  BadRequestException,
   Catch,
+  ConflictException,
   InternalServerErrorException,
   NotFoundException,
   UnprocessableEntityException,
@@ -20,7 +20,7 @@ export class PrismaClientExceptionFilter extends BaseExceptionFilter {
          * Unique constraint violation
          */
         const target = (exception.meta?.target ?? []) as string[];
-        throw new BadRequestException(`${target} is already been used`);
+        throw new ConflictException(`This ${target} is already in use`);
       }
       case 'P2003': {
         /**
