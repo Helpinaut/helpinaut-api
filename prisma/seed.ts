@@ -3,7 +3,7 @@ import { hash } from 'bcrypt';
 
 const prisma = new PrismaClient();
 
-async function main() {
+async function clearDatabase() {
   /**
    * Delete all records to reset database
    */
@@ -11,6 +11,10 @@ async function main() {
   await prisma.advert.deleteMany();
   console.log(`Deleted ${await prisma.user.count()} users`);
   await prisma.user.deleteMany();
+}
+
+async function main() {
+  await clearDatabase();
 
   /**
    * Insert users
