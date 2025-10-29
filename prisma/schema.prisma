@@ -22,11 +22,11 @@ model Advert {
   id          String     @id @default(uuid())
   title       String
   description String
-  price       Int
+  price       Float
   category    Category
   offer       Boolean
   photo       String?
-  favorite    Favorite[]
+  favorites   Favorite[]
   status      Status     @default(ACTIVE)
   owner       User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   ownerId     String
