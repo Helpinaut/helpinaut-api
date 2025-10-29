@@ -8,7 +8,6 @@ import { JwtAuthGuard } from './auth/guard/jwt-auth.guard';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const port = process.env.PORT ?? 3000;
-  const jwtAuthGuard = app.get(JwtAuthGuard);
 
   app.setGlobalPrefix('api');
 
@@ -43,6 +42,9 @@ async function bootstrap() {
     }),
   );
   app.useGlobalFilters(new PrismaClientExceptionFilter());
+
+  const jwtAuthGuard = app.get(JwtAuthGuard);
+
   app.useGlobalGuards(jwtAuthGuard);
 
   await app.listen(port, () => {
