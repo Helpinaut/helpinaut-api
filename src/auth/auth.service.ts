@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { LoginDto } from './dto/login.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -22,7 +18,7 @@ export class AuthService {
         where: { email: user.email },
       });
 
-      if (await bcrypt.compare(user.password, foundUser.password)) {
+      if (!(await bcrypt.compare(user.password, foundUser.password))) {
         throw new UnauthorizedException('Invalid email or password');
       }
 

@@ -3,7 +3,6 @@ import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { PrismaClientExceptionFilter } from './utils/prisma-client-exception.filter';
-import { JwtAuthGuard } from './auth/guard/jwt-auth.guard';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -42,10 +41,6 @@ async function bootstrap() {
     }),
   );
   app.useGlobalFilters(new PrismaClientExceptionFilter());
-
-  const jwtAuthGuard = app.get(JwtAuthGuard);
-
-  app.useGlobalGuards(jwtAuthGuard);
 
   await app.listen(port, () => {
     console.log(`Helpinaut API running in port ${port}`);
