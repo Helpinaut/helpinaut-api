@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Category, Status } from '@prisma/client';
+import { Category, Photo, Status } from '@prisma/client';
 
 export class AdvertEntity {
   @ApiProperty()
@@ -21,7 +21,7 @@ export class AdvertEntity {
   offer: boolean;
 
   @ApiProperty({ required: false })
-  photo?: string | null;
+  photos?: Photo[];
 
   @ApiProperty({ required: false })
   isFavorite?: boolean;

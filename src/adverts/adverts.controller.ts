@@ -4,11 +4,11 @@ import {
   Controller,
   Post,
   Req,
-  UploadedFile,
+  UploadedFiles,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { diskStorage } from 'multer';
 import path, { join } from 'path';
@@ -34,18 +34,18 @@ export class AdvertsController {
   @Post()
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(
-    FileInterceptor('photo', { storage }),
+    FilesInterceptor('photos', 10, { storage }),
     DeleteFileOnErrorInterceptor,
   )
   @ApiConsumes('multipart/form-data')
   async create(
-    @UploadedFile(new ImageFilePipe()) file: Express.Multer.File,
+    @UploadedFiles(new ImageFilePipe()) files: Express.Multer.File[],
     @Body() createAdvertDto: CreateAdvertDto,
     @Req() req: AuthenticatedRequest,
   ) {
-    const photoPath = file
-      ? `/${process.env.UPLOAD_DIR}/${file.filename}`
-      : undefined;
-    return this.advertsService.create(createAdvertDto, req.user.id, photoPath);
+    const photoPaths = files?.length
+      ? files.map((file) => `/${process.env.UPLOAD_DIR}/${file.filename}`)
+      : [];
+    return this.advertsService.create(createAdvertDto, req.user.id, photoPaths);
   }
 }

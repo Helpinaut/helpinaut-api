@@ -15,7 +15,7 @@ export class AdvertsService {
   async create(
     createAdvertDto: CreateAdvertDto,
     ownerId: string,
-    photoPath?: string,
+    photoPaths: string[],
   ) {
     const normalizedCategory = createAdvertDto.category
       .toUpperCase()
@@ -31,9 +31,12 @@ export class AdvertsService {
       data: {
         ...createAdvertDto,
         category: normalizedCategory as Category,
-        photo: photoPath,
+        photos: {
+          create: photoPaths.map((url) => ({ url })),
+        },
         ownerId,
       },
+      include: { photos: true },
     });
 
     return advert;

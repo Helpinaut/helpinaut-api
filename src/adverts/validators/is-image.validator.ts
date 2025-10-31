@@ -28,7 +28,7 @@ export class IsImageValidator extends FileValidator<IsImageValidatorOptions> {
   buildErrorMessage(): string {
     return (
       this.validationOptions?.message ||
-      'file must be a valid image (jpg, jpeg, png or webp)'
+      'there are files that are not valid images (jpg, jpeg, png or webp)'
     );
   }
 }

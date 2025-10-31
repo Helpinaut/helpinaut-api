@@ -18,7 +18,7 @@ export class MaxFileSizeValidator extends FileValidator<MaxFileSizeValidatorOpti
   buildErrorMessage(): string {
     return (
       this.validationOptions?.message ||
-      `file size exceeds ${this.validationOptions.maxSize / 1024 / 1024} MB`
+      `there are images that exceed ${this.validationOptions.maxSize / 1024 / 1024} MB size limit`
     );
   }
 }

@@ -4,7 +4,7 @@ import {
   Injectable,
   NestInterceptor,
 } from '@nestjs/common';
-import { Observable, catchError, throwError, from } from 'rxjs';
+import { Observable, catchError, throwError } from 'rxjs';
 import { unlink } from 'fs/promises';
 
 @Injectable()
@@ -14,12 +14,14 @@ export class DeleteFileOnErrorInterceptor implements NestInterceptor {
 
     return next.handle().pipe(
       catchError((err) => {
-        const file = request.file;
-
-        if (file?.path) {
-          from(unlink(file.path));
+        const files = request.files || (request.file ? [request.file] : []);
+        if (files.length) {
+          for (const f of files) {
+            if (f?.path) {
+              unlink(f.path);
+            }
+          }
         }
-
         return throwError(() => err);
       }),
     );

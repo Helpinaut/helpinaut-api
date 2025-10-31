@@ -25,13 +25,21 @@ model Advert {
   price       Float
   category    Category
   offer       Boolean
-  photo       String?
+  photos      Photo[]
   favorites   Favorite[]
   status      Status     @default(ACTIVE)
   owner       User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   ownerId     String
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
+}
+
+model Photo {
+  id        String   @id @default(uuid())
+  url       String
+  advert    Advert   @relation(fields: [advertId], references: [id])
+  advertId  String
+  createdAt DateTime @default(now())
 }
 
 model Favorite {

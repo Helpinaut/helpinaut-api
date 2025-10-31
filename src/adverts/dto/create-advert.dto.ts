@@ -14,19 +14,32 @@ import {
 } from 'class-validator';
 
 export class CreateAdvertDto {
-  @ApiProperty({ required: true, maxLength: 50 })
+  @ApiProperty({
+    required: true,
+    maxLength: 50,
+    description: 'max length 50 characters',
+  })
   @IsString()
   @IsNotEmpty()
   @MaxLength(50)
   title: string;
 
-  @ApiProperty({ required: true, maxLength: 500 })
+  @ApiProperty({
+    required: true,
+    maxLength: 500,
+    description: 'max length 500 characters',
+  })
   @IsString()
   @IsNotEmpty()
   @MaxLength(500)
   description: string;
 
-  @ApiProperty({ required: true, minimum: 1, maximum: 9999.99 })
+  @ApiProperty({
+    required: true,
+    minimum: 1,
+    maximum: 9999.99,
+    description: 'from 1.00 to 9999.99',
+  })
   @Type(() => Number)
   @IsNumber()
   @IsNotEmpty()
@@ -44,7 +57,11 @@ export class CreateAdvertDto {
   @IsBoolean()
   offer: boolean;
 
-  @ApiPropertyOptional({ required: false, type: 'string', format: 'binary' })
+  @ApiPropertyOptional({
+    type: 'array',
+    items: { type: 'string', format: 'binary' },
+    description: 'up to 10 image files',
+  })
   @IsOptional()
-  photo?: any;
+  photos?: any[];
 }
