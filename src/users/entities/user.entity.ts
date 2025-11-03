@@ -5,6 +5,10 @@ import { Exclude } from 'class-transformer';
 type UserWithoutPassword = Omit<User, 'password'>;
 
 export class UserEntity implements UserWithoutPassword {
+  constructor(partial: Partial<UserEntity>) {
+    Object.assign(this, partial);
+  }
+
   @ApiProperty()
   id: string;
 
