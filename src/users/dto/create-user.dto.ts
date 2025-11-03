@@ -9,19 +9,19 @@ import {
 
 export class CreateUserDto {
   @ApiProperty({ required: true })
-  @IsEmail()
   @IsNotEmpty()
+  @IsEmail()
   email: string;
 
   @ApiProperty({ required: true })
-  @IsString()
   @IsNotEmpty()
+  @IsString()
   @MaxLength(16)
   username: string;
 
   @ApiProperty({ required: true })
-  @IsString()
   @IsNotEmpty()
+  @IsString()
   @MinLength(8)
   password: string;
 }

@@ -19,8 +19,8 @@ export class CreateAdvertDto {
     maxLength: 50,
     description: 'max length 50 characters',
   })
-  @IsString()
   @IsNotEmpty()
+  @IsString()
   @MaxLength(50)
   title: string;
 
@@ -29,8 +29,8 @@ export class CreateAdvertDto {
     maxLength: 500,
     description: 'max length 500 characters',
   })
-  @IsString()
   @IsNotEmpty()
+  @IsString()
   @MaxLength(500)
   description: string;
 
@@ -41,19 +41,21 @@ export class CreateAdvertDto {
     description: 'from 1.00 to 9999.99',
   })
   @Type(() => Number)
-  @IsNumber()
   @IsNotEmpty()
+  @IsNumber()
   @Min(1)
   @Max(9999.99)
   price: number;
 
   @ApiProperty({ required: true, enum: Category })
+  @IsNotEmpty()
   @IsString()
   @IsEnum(Category)
   category: string;
 
   @ApiProperty({ required: true })
   @Type(() => Boolean)
+  @IsNotEmpty()
   @IsBoolean()
   offer: boolean;
 

@@ -11,29 +11,28 @@ import {
 
 export class SignUpDto {
   @ApiProperty({ required: true })
-  @IsEmail()
   @IsNotEmpty()
+  @IsEmail()
   email: string;
 
   @ApiProperty({ required: true })
+  @IsNotEmpty()
   @IsString()
   @MaxLength(16)
-  @IsNotEmpty()
   username: string;
 
   @ApiProperty({ required: true })
+  @IsNotEmpty()
   @IsString()
-  @IsNotEmpty()
   @MinLength(8)
-  @IsNotEmpty()
   password: string;
 
   @ApiProperty({ required: true })
+  @IsNotEmpty({ message: 'repeated password should not be empty' })
   @IsString()
   @MinLength(8, {
     message: 'repeated password must be longer than or equal to 8 characters',
   })
-  @IsNotEmpty({ message: 'repeated password should not be empty' })
   @ValidateIf((dto: SignUpDto) => dto.password !== dto.repeatedPassword)
   @Equals('password', { message: 'passwords do not match' })
   repeatedPassword: string;
