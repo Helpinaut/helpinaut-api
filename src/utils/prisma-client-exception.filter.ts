@@ -20,22 +20,22 @@ export class PrismaClientExceptionFilter extends BaseExceptionFilter {
          * Unique constraint violation
          */
         const target = (exception.meta?.target ?? []) as string[];
-        throw new ConflictException(`This ${target} is already in use`);
+        throw new ConflictException(`this ${target} is already in use`);
       }
       case 'P2003': {
         /**
          * Foreign key constraint violation
          */
-        throw new UnprocessableEntityException("Entity doesn't exist");
+        throw new UnprocessableEntityException("entity doesn't exist");
       }
       case 'P2025': {
         /**
          * Non-existing object
          */
-        throw new NotFoundException('Resource not found');
+        throw new NotFoundException('resource not found');
       }
       default:
-        throw new InternalServerErrorException('Internal server error');
+        throw new InternalServerErrorException('internal server error');
     }
   }
 }
