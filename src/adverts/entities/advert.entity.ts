@@ -1,7 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Category, Photo, Status } from '@prisma/client';
+import { Exclude } from 'class-transformer';
 
 export class AdvertEntity {
+  constructor(partial: Partial<AdvertEntity>) {
+    Object.assign(this, partial);
+  }
+
   @ApiProperty()
   id: string;
 
@@ -23,18 +28,18 @@ export class AdvertEntity {
   @ApiProperty({ required: false })
   photos?: Photo[];
 
-  @ApiProperty({ required: false })
-  isFavorite?: boolean;
-
   @ApiProperty({ enum: Status })
   status: Status;
-
-  @ApiProperty()
-  ownerId: string;
 
   @ApiProperty()
   createdAt: Date;
 
   @ApiProperty()
   updatedAt: Date;
+
+  @ApiProperty()
+  isOwner: boolean;
+
+  @Exclude()
+  ownerId: string;
 }
