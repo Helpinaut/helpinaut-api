@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Category } from '@prisma/client';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   IsBoolean,
   IsEnum,
@@ -48,6 +48,11 @@ export class CreateAdvertDto {
   price: number;
 
   @ApiProperty({ required: true, enum: Category })
+  @Transform(({ value }) =>
+    typeof value === 'string'
+      ? value.toUpperCase().replace(/\s+/g, '_')
+      : value,
+  )
   @IsNotEmpty()
   @IsString()
   @IsEnum(Category)

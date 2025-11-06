@@ -30,6 +30,10 @@ export class UserEntity implements UserWithoutPassword {
   @ApiProperty()
   updatedAt: Date;
 
+  /**
+   * Private properties
+   */
+
   @Exclude()
   password: string;
 }
