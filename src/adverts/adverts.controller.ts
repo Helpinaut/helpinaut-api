@@ -24,15 +24,17 @@ import { diskStorage } from 'multer';
 import path, { join } from 'path';
 
 import { AdvertsService } from './adverts.service';
+import { AddPhotoDto } from './dto/add-photo.dto';
 import { CreateAdvertDto } from './dto/create-advert.dto';
 import { UpdateAdvertDto } from './dto/update-advert.dto';
 import { AdvertEntity } from './entities/advert.entity';
 import { ImageFilePipe } from './pipes/image-file.pipe';
-import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
+import {
+  JwtAuthGuard,
+  OptionalJwtAuthGuard,
+} from 'src/auth/guard/jwt-auth.guard';
 import { GetUser } from 'src/auth/decorators/get-user.decorator';
 import { DeleteFileOnErrorInterceptor } from 'src/utils/delete-file-on-error.interceptor';
-import type { AuthenticatedRequest } from 'src/auth/interfaces/request-user.interface';
-import { OptionalJwtAuthGuard } from 'src/auth/guard/optional-jwt-auth.guard';
 
 const storage = diskStorage({
   destination: join(process.cwd(), String(process.env.UPLOAD_DIR)),
@@ -51,6 +53,7 @@ export class AdvertsController {
     FilesInterceptor('photos', 10, { storage }),
     DeleteFileOnErrorInterceptor,
   )
+  @ApiBearerAuth()
   @ApiConsumes('multipart/form-data')
   @ApiCreatedResponse({ type: AdvertEntity })
   async create(
@@ -64,20 +67,25 @@ export class AdvertsController {
     return this.advertsService.create(createAdvertDto, userId, photoPaths);
   }
 
-  //TODO get categories
+  @Get('categories')
+  @ApiOkResponse({ type: String, isArray: true })
+  async findCategories() {
+    return this.advertsService.findCategories();
+  }
 
   @Get()
-  @ApiCreatedResponse({ type: AdvertEntity, isArray: true })
-  async findAll() {
-    return this.advertsService.findAll();
+  @UseGuards(OptionalJwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: AdvertEntity, isArray: true })
+  async findAll(@GetUser('id') userId: string | null) {
+    return this.advertsService.findAll(userId);
   }
 
   @Get(':id')
   @UseGuards(OptionalJwtAuthGuard)
   @ApiBearerAuth()
   @ApiOkResponse({ type: AdvertEntity })
-  async findOne(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
-    const userId = req.user?.id;
+  async findOne(@Param('id') id: string, @GetUser('id') userId: string | null) {
     return this.advertsService.findOne(id, userId);
   }
 
@@ -87,26 +95,55 @@ export class AdvertsController {
     FilesInterceptor('photos', 10, { storage }),
     DeleteFileOnErrorInterceptor,
   )
-  @ApiCreatedResponse({ type: AdvertEntity })
+  @ApiBearerAuth()
   @ApiConsumes('multipart/form-data')
+  @ApiOkResponse({ type: AdvertEntity })
   async update(
-    @UploadedFiles(new ImageFilePipe()) files: Express.Multer.File[],
-    @Param('id') id: string,
     @Body() updateAdvertDto: UpdateAdvertDto,
+    @Param('id') id: string,
     @GetUser('id') userId: string,
   ) {
-    //TODO manage photos
     return this.advertsService.update(id, userId, updateAdvertDto);
   }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: AdvertEntity })
+  async remove(@Param('id') id: string, @GetUser('id') userId: string) {
+    return this.advertsService.remove(id, userId);
+  }
+
+  @Post(':id/photos')
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(
     FilesInterceptor('photos', 10, { storage }),
     DeleteFileOnErrorInterceptor,
   )
-  @ApiCreatedResponse({ type: AdvertEntity })
-  async remove(@Param('id') id: string, @GetUser('id') userId: string) {
-    return this.advertsService.remove(id, userId);
+  @ApiBearerAuth()
+  @ApiConsumes('multipart/form-data')
+  @ApiOkResponse({ type: AdvertEntity })
+  async addPhoto(
+    @UploadedFiles(new ImageFilePipe()) files: Express.Multer.File[],
+    @Body() addPhotoDto: AddPhotoDto,
+    @Param('id') id: string,
+    @GetUser('id') userId: string,
+  ) {
+    const photoPaths = files?.length
+      ? files.map((file) => `/${process.env.UPLOAD_DIR}/${file.filename}`)
+      : [];
+    return this.advertsService.addPhoto(id, userId, photoPaths);
+  }
+
+  @Delete(':id/photos/:photoId')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: AdvertEntity })
+  async removePhoto(
+    @Param('id') id: string,
+    @Param('photoId') photoId: string,
+    @GetUser('id') userId: string,
+  ) {
+    return this.advertsService.removePhoto(id, photoId, userId);
   }
 }

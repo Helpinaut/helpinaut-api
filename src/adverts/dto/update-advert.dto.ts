@@ -58,6 +58,4 @@ export class UpdateAdvertDto {
   )
   @IsEnum(Status)
   status?: Status;
-
-  //TODO photos
 }
