@@ -272,4 +272,30 @@ export class AdvertsService {
 
     return { message: 'advert removed from favorites' };
   }
+
+  async findFavorites(userId: string) {
+    const favorites = await this.prisma.favorite.findMany({
+      where: { userId },
+      include: {
+        advert: {
+          include: {
+            photos: true,
+            owner: { select: { username: true } },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return favorites.map(
+      (favorite) =>
+        new AdvertEntity({
+          ...favorite.advert,
+          owner: new PublicUserEntity(favorite.advert.owner),
+          photos: favorite.advert.photos.map((photo) => new PhotoEntity(photo)),
+          isOwner: false,
+          isFavorite: true,
+        }),
+    );
+  }
 }

@@ -57,6 +57,10 @@ export class AdvertEntity {
   @Expose()
   isOwner: boolean;
 
+  @ApiProperty()
+  @Expose()
+  isFavorite: boolean;
+
   /**
    * Private properties
    */

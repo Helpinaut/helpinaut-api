@@ -146,6 +146,14 @@ export class AdvertsController {
     return this.advertsService.removePhoto(id, photoId, userId);
   }
 
+  @Get('favorites/me')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: AdvertEntity })
+  async findFavorites(@GetUser('id') userId: string) {
+    return this.advertsService.findFavorites(userId);
+  }
+
   @Post(':id/favorites')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
