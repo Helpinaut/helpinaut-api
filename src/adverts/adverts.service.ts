@@ -250,4 +250,26 @@ export class AdvertsService {
 
     return { message: 'advert added to favorites' };
   }
+
+  /**
+   * This action removes a selected advert from favorite list.
+   * @param advertId
+   * @param userId
+   * @returns
+   */
+  async removeFavorite(advertId: string, userId: string) {
+    const favorite = await this.prisma.favorite.findUniqueOrThrow({
+      where: { userId_advertId: { userId, advertId } },
+    });
+
+    if (favorite.userId !== userId) {
+      throw new UnauthorizedException('unauthorized to modify this advert');
+    }
+
+    await this.prisma.favorite.delete({
+      where: { userId_advertId: { userId, advertId } },
+    });
+
+    return { message: 'advert removed from favorites' };
+  }
 }

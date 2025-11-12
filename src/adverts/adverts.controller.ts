@@ -7,7 +7,6 @@ import {
   Param,
   Patch,
   Post,
-  Req,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
@@ -145,5 +144,21 @@ export class AdvertsController {
     @GetUser('id') userId: string,
   ) {
     return this.advertsService.removePhoto(id, photoId, userId);
+  }
+
+  @Post(':id/favorites')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOkResponse({ description: 'advert added to favorites' })
+  async addFavorite(@Param('id') id: string, @GetUser('id') userId: string) {
+    return this.advertsService.addFavorite(id, userId);
+  }
+
+  @Delete(':id/favorites')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOkResponse({ description: 'advert removed from favorites' })
+  async removeFavorite(@Param('id') id: string, @GetUser('id') userId: string) {
+    return this.advertsService.removeFavorite(id, userId);
   }
 }
