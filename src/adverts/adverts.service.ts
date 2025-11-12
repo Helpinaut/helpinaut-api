@@ -80,6 +80,11 @@ export class AdvertsService {
           ...advert,
           owner: new PublicUserEntity(advert.owner),
           isOwner: userId ? advert.ownerId === userId : false,
+          isFavorite: userId
+            ? this.prisma.favorite.findUnique({
+                where: { userId_advertId: { userId, advertId: advert.id } },
+              }) !== null
+            : false,
         }),
     );
   }
@@ -100,6 +105,11 @@ export class AdvertsService {
       owner: new PublicUserEntity(advert.owner),
       photos: advert.photos.map((photo) => new PhotoEntity(photo)),
       isOwner: userId ? advert.ownerId === userId : false,
+      isFavorite: userId
+        ? this.prisma.favorite.findUnique({
+            where: { userId_advertId: { userId, advertId: advert.id } },
+          }) !== null
+        : false,
     });
   }
 
