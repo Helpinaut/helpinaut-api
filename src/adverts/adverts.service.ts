@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 
 import { Category, Status } from '@prisma/client';
 import { CreateAdvertDto } from './dto/create-advert.dto';
@@ -155,6 +160,13 @@ export class AdvertsService {
     return new AdvertEntity(deletedAdvert);
   }
 
+  /**
+   * This action adds photo objects to a selected advert photo array property.
+   * @param advertId
+   * @param userId
+   * @param photoPaths
+   * @returns
+   */
   async addPhoto(advertId: string, userId: string, photoPaths: string[]) {
     const advert = await this.prisma.advert.findUniqueOrThrow({
       where: { id: advertId },
@@ -179,6 +191,13 @@ export class AdvertsService {
     });
   }
 
+  /**
+   * This action removes photo object to a selected advert photo array property.
+   * @param advertId
+   * @param photoId
+   * @param userId
+   * @returns
+   */
   async removePhoto(advertId: string, photoId: string, userId: string) {
     const advert = await this.prisma.advert.findUniqueOrThrow({
       where: { id: advertId },
@@ -200,5 +219,35 @@ export class AdvertsService {
       photos: updatedAdvert.photos.map((photo) => new PhotoEntity(photo)),
       isOwner: true,
     });
+  }
+
+  /**
+   * This action adds a selected advert to favorite list.
+   * @param advertId
+   * @param userId
+   * @returns
+   */
+  async addFavorite(advertId: string, userId: string) {
+    const advert = await this.prisma.advert.findUniqueOrThrow({
+      where: { id: advertId },
+    });
+
+    if (advert.ownerId === userId) {
+      throw new ForbiddenException(
+        'owned adverts cannot be marked as favorite',
+      );
+    }
+
+    if (
+      await this.prisma.favorite.findUnique({
+        where: { userId_advertId: { userId, advertId } },
+      })
+    ) {
+      throw new ForbiddenException('this advert is already marked as favorite');
+    }
+
+    await this.prisma.favorite.create({ data: { userId, advertId } });
+
+    return { message: 'advert added to favorites' };
   }
 }

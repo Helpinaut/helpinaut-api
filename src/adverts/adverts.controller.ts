@@ -67,12 +67,6 @@ export class AdvertsController {
     return this.advertsService.create(createAdvertDto, userId, photoPaths);
   }
 
-  @Get('categories')
-  @ApiOkResponse({ type: String, isArray: true })
-  async findCategories() {
-    return this.advertsService.findCategories();
-  }
-
   @Get()
   @UseGuards(OptionalJwtAuthGuard)
   @ApiBearerAuth()
@@ -112,6 +106,12 @@ export class AdvertsController {
   @ApiOkResponse({ type: AdvertEntity })
   async remove(@Param('id') id: string, @GetUser('id') userId: string) {
     return this.advertsService.remove(id, userId);
+  }
+
+  @Get('categories')
+  @ApiOkResponse({ type: String, isArray: true })
+  async findCategories() {
+    return this.advertsService.findCategories();
   }
 
   @Post(':id/photos')

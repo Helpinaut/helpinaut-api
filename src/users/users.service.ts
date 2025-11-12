@@ -41,6 +41,7 @@ export class UsersService {
   async findOne(id: string) {
     const user = await this.prisma.user.findUniqueOrThrow({
       where: { id },
+      include: { adverts: true, favorites: { include: { advert: true } } },
     });
 
     return new UserEntity(user);
