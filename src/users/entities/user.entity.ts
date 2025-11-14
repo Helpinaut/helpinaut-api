@@ -25,6 +25,15 @@ export class UserEntity implements UserWithoutPassword {
   favorites: Favorite[];
 
   @ApiProperty()
+  postcode: string | null;
+
+  @ApiProperty()
+  latitude: number | null;
+
+  @ApiProperty()
+  longitude: number | null;
+
+  @ApiProperty()
   createdAt: Date;
 
   @ApiProperty()

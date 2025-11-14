@@ -1,13 +1,18 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UserEntity } from './entities/user.entity';
+import { UpdateLocationDto } from './dto/update-location.dto';
+import { GeocodingService } from './services/geocoding.service';
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private geocoding: GeocodingService,
+  ) {}
 
   /**
    * This action adds a new user with hashed password. UserEntity prevents excluded properties from being shown.
@@ -82,5 +87,22 @@ export class UsersService {
     const deletedUser = await this.prisma.user.delete({ where: { id } });
 
     return new UserEntity(deletedUser);
+  }
+
+  async updateLocation(id: string, updateLocationDto: UpdateLocationDto) {
+    const { postcode } = updateLocationDto;
+    const { latitude, longitude } =
+      await this.geocoding.fromPostalCode(postcode);
+
+    if (!latitude || !longitude) {
+      throw new BadRequestException('unable to find location');
+    }
+
+    await this.prisma.user.update({
+      where: { id },
+      data: { postcode, latitude, longitude },
+    });
+
+    return { message: 'location successfully updated' };
   }
 }

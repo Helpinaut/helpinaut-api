@@ -17,6 +17,9 @@ export class PublicUserEntity implements User {
   adverts: Advert[];
 
   @Expose()
+  postcode: string | null;
+
+  @Expose()
   createdAt: Date;
 
   /**
@@ -31,6 +34,12 @@ export class PublicUserEntity implements User {
 
   @Exclude()
   favorites: Favorite[];
+
+  @Exclude()
+  latitude: number | null;
+
+  @Exclude()
+  longitude: number | null;
 
   @Exclude()
   updatedAt: Date;
