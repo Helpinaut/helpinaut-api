@@ -103,6 +103,11 @@ export class UsersService {
       data: { postcode, latitude, longitude },
     });
 
+    await this.prisma.advert.updateMany({
+      where: { ownerId: id },
+      data: { latitude, longitude },
+    });
+
     return { message: 'location successfully updated' };
   }
 }

@@ -34,6 +34,17 @@ export class AdvertsService {
       Category,
     );
 
+    const user = await this.prisma.user.findUniqueOrThrow({
+      where: { id: ownerId },
+      select: { latitude: true, longitude: true },
+    });
+
+    if (!user.latitude || !user.longitude) {
+      throw new BadRequestException(
+        'must set location before creating adverts',
+      );
+    }
+
     const createdAdvert = await this.prisma.advert.create({
       data: {
         ...createAdvertDto,
@@ -42,6 +53,8 @@ export class AdvertsService {
           create: photoPaths.map((url) => ({ url })),
         },
         ownerId,
+        latitude: user.latitude,
+        longitude: user.longitude,
       },
       include: { photos: true },
     });
