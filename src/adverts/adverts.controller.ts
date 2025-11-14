@@ -7,7 +7,6 @@ import {
   Param,
   Patch,
   Post,
-  Req,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
@@ -67,12 +66,6 @@ export class AdvertsController {
     return this.advertsService.create(createAdvertDto, userId, photoPaths);
   }
 
-  @Get('categories')
-  @ApiOkResponse({ type: String, isArray: true })
-  async findCategories() {
-    return this.advertsService.findCategories();
-  }
-
   @Get()
   @UseGuards(OptionalJwtAuthGuard)
   @ApiBearerAuth()
@@ -114,6 +107,12 @@ export class AdvertsController {
     return this.advertsService.remove(id, userId);
   }
 
+  @Get('categories')
+  @ApiOkResponse({ type: String, isArray: true })
+  async findCategories() {
+    return this.advertsService.findCategories();
+  }
+
   @Post(':id/photos')
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(
@@ -145,5 +144,29 @@ export class AdvertsController {
     @GetUser('id') userId: string,
   ) {
     return this.advertsService.removePhoto(id, photoId, userId);
+  }
+
+  @Get('favorites/me')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: AdvertEntity })
+  async findFavorites(@GetUser('id') userId: string) {
+    return this.advertsService.findFavorites(userId);
+  }
+
+  @Post(':id/favorites')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOkResponse({ description: 'advert added to favorites' })
+  async addFavorite(@Param('id') id: string, @GetUser('id') userId: string) {
+    return this.advertsService.addFavorite(id, userId);
+  }
+
+  @Delete(':id/favorites')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOkResponse({ description: 'advert removed from favorites' })
+  async removeFavorite(@Param('id') id: string, @GetUser('id') userId: string) {
+    return this.advertsService.removeFavorite(id, userId);
   }
 }

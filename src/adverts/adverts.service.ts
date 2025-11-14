@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 
 import { Category, Status } from '@prisma/client';
 import { CreateAdvertDto } from './dto/create-advert.dto';
@@ -75,6 +80,11 @@ export class AdvertsService {
           ...advert,
           owner: new PublicUserEntity(advert.owner),
           isOwner: userId ? advert.ownerId === userId : false,
+          isFavorite: userId
+            ? this.prisma.favorite.findUnique({
+                where: { userId_advertId: { userId, advertId: advert.id } },
+              }) !== null
+            : false,
         }),
     );
   }
@@ -95,6 +105,11 @@ export class AdvertsService {
       owner: new PublicUserEntity(advert.owner),
       photos: advert.photos.map((photo) => new PhotoEntity(photo)),
       isOwner: userId ? advert.ownerId === userId : false,
+      isFavorite: userId
+        ? this.prisma.favorite.findUnique({
+            where: { userId_advertId: { userId, advertId: advert.id } },
+          }) !== null
+        : false,
     });
   }
 
@@ -155,6 +170,13 @@ export class AdvertsService {
     return new AdvertEntity(deletedAdvert);
   }
 
+  /**
+   * This action adds photo objects to a selected advert photo array property.
+   * @param advertId
+   * @param userId
+   * @param photoPaths
+   * @returns
+   */
   async addPhoto(advertId: string, userId: string, photoPaths: string[]) {
     const advert = await this.prisma.advert.findUniqueOrThrow({
       where: { id: advertId },
@@ -179,6 +201,13 @@ export class AdvertsService {
     });
   }
 
+  /**
+   * This action removes photo object to a selected advert photo array property.
+   * @param advertId
+   * @param photoId
+   * @param userId
+   * @returns
+   */
   async removePhoto(advertId: string, photoId: string, userId: string) {
     const advert = await this.prisma.advert.findUniqueOrThrow({
       where: { id: advertId },
@@ -200,5 +229,83 @@ export class AdvertsService {
       photos: updatedAdvert.photos.map((photo) => new PhotoEntity(photo)),
       isOwner: true,
     });
+  }
+
+  /**
+   * This action adds a selected advert to favorite list.
+   * @param advertId
+   * @param userId
+   * @returns
+   */
+  async addFavorite(advertId: string, userId: string) {
+    const advert = await this.prisma.advert.findUniqueOrThrow({
+      where: { id: advertId },
+    });
+
+    if (advert.ownerId === userId) {
+      throw new ForbiddenException(
+        'owned adverts cannot be marked as favorite',
+      );
+    }
+
+    if (
+      await this.prisma.favorite.findUnique({
+        where: { userId_advertId: { userId, advertId } },
+      })
+    ) {
+      throw new ForbiddenException('this advert is already marked as favorite');
+    }
+
+    await this.prisma.favorite.create({ data: { userId, advertId } });
+
+    return { message: 'advert added to favorites' };
+  }
+
+  /**
+   * This action removes a selected advert from favorite list.
+   * @param advertId
+   * @param userId
+   * @returns
+   */
+  async removeFavorite(advertId: string, userId: string) {
+    const favorite = await this.prisma.favorite.findUniqueOrThrow({
+      where: { userId_advertId: { userId, advertId } },
+    });
+
+    if (favorite.userId !== userId) {
+      throw new UnauthorizedException('unauthorized to modify this advert');
+    }
+
+    await this.prisma.favorite.delete({
+      where: { userId_advertId: { userId, advertId } },
+    });
+
+    return { message: 'advert removed from favorites' };
+  }
+
+  async findFavorites(userId: string) {
+    const favorites = await this.prisma.favorite.findMany({
+      where: { userId },
+      include: {
+        advert: {
+          include: {
+            photos: true,
+            owner: { select: { username: true } },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return favorites.map(
+      (favorite) =>
+        new AdvertEntity({
+          ...favorite.advert,
+          owner: new PublicUserEntity(favorite.advert.owner),
+          photos: favorite.advert.photos.map((photo) => new PhotoEntity(photo)),
+          isOwner: false,
+          isFavorite: true,
+        }),
+    );
   }
 }
