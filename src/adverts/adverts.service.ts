@@ -14,6 +14,7 @@ import { normalizeEnum } from 'src/utils/normalize-enum.util';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PublicUserEntity } from 'src/users/entities/public-user.entity';
 import { PhotoEntity } from './entities/photo.entity';
+import { FilterAdvertDto } from './dto/filter-advert.dto';
 
 @Injectable()
 export class AdvertsService {
@@ -80,26 +81,64 @@ export class AdvertsService {
    * This action returns all adverts.
    * @returns AdvertEntity[]
    */
-  async findAll(userId: string | null) {
+  async findAll(userId: string | null, filters: FilterAdvertDto) {
+    const {
+      page = '1',
+      limit = '20',
+      title,
+      minPrice,
+      maxPrice,
+      category,
+      offer,
+    } = filters;
+    const take = Number(limit);
+    const skip = (Number(page) - 1) * take;
+    const where: any = { status: 'ACTIVE' };
+
+    if (Number(page) < 1 || take < 1 || take > 20) {
+      throw new BadRequestException('invalid pagination parameters');
+    }
+    if (title) {
+      where.title = { contains: title, mode: 'insensitive' };
+    }
+    if (category) {
+      where.category = category;
+    }
+    if (minPrice) {
+      where.price = { ...(where.price ?? {}), gte: Number(minPrice) };
+    }
+    if (maxPrice) {
+      where.price = { ...(where.price ?? {}), lte: Number(maxPrice) };
+    }
+    if (offer) {
+      where.offer = offer === 'true';
+    }
+
     const adverts = await this.prisma.advert.findMany({
-      where: { status: 'ACTIVE' },
+      where,
+      take,
+      skip,
       include: { owner: { select: { username: true } }, photos: true },
       orderBy: { createdAt: 'desc' },
     });
 
-    return adverts.map(
-      (advert) =>
-        new AdvertEntity({
+    const result = await Promise.all(
+      adverts.map(async (advert) => {
+        const favorite = userId
+          ? await this.prisma.favorite.findUnique({
+              where: { userId_advertId: { userId, advertId: advert.id } },
+            })
+          : null;
+        return new AdvertEntity({
           ...advert,
           owner: new PublicUserEntity(advert.owner),
           isOwner: userId ? advert.ownerId === userId : false,
-          isFavorite: userId
-            ? this.prisma.favorite.findUnique({
-                where: { userId_advertId: { userId, advertId: advert.id } },
-              }) !== null
-            : false,
-        }),
+          isFavorite: !!favorite,
+        });
+      }),
     );
+
+    return result;
   }
 
   /**

@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
@@ -34,6 +35,7 @@ import {
 } from 'src/auth/guard/jwt-auth.guard';
 import { GetUser } from 'src/auth/decorators/get-user.decorator';
 import { DeleteFileOnErrorInterceptor } from 'src/utils/delete-file-on-error.interceptor';
+import { FilterAdvertDto } from './dto/filter-advert.dto';
 
 const storage = diskStorage({
   destination: join(process.cwd(), String(process.env.UPLOAD_DIR)),
@@ -70,8 +72,11 @@ export class AdvertsController {
   @UseGuards(OptionalJwtAuthGuard)
   @ApiBearerAuth()
   @ApiOkResponse({ type: AdvertEntity, isArray: true })
-  async findAll(@GetUser('id') userId: string | null) {
-    return this.advertsService.findAll(userId);
+  async findAll(
+    @GetUser('id') userId: string | null,
+    @Query() filters: FilterAdvertDto,
+  ) {
+    return this.advertsService.findAll(userId, filters);
   }
 
   @Get(':id')
