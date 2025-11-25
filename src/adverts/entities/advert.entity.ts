@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Category, Photo, Status } from '@prisma/client';
+import { Category, Status } from '@prisma/client';
 import { Exclude, Expose } from 'class-transformer';
 import { PublicUserEntity } from 'src/users/entities/public-user.entity';
 import { PhotoEntity } from './photo.entity';

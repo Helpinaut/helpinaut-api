@@ -35,6 +35,7 @@ export class PrismaClientExceptionFilter extends BaseExceptionFilter {
         throw new NotFoundException('resource not found');
       }
       default:
+        console.log(exception);
         throw new InternalServerErrorException('internal server error');
     }
   }

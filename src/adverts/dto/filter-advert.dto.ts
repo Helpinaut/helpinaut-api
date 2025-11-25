@@ -47,4 +47,22 @@ export class FilterAdvertDto {
   @IsOptional()
   @IsBooleanString()
   offer?: string;
+
+  @ApiPropertyOptional({ description: 'use user location' })
+  @IsOptional()
+  @IsBooleanString()
+  useUserLocation?: string;
+
+  @ApiPropertyOptional({ description: 'latitude if not using user location' })
+  @IsOptional()
+  latitude?: string;
+
+  @ApiPropertyOptional({ description: 'longitude if not using user location' })
+  @IsOptional()
+  longitude?: string;
+
+  @ApiPropertyOptional({ description: 'maximum distance in KM' })
+  @IsOptional()
+  @IsNumberString()
+  maxDistance?: string;
 }

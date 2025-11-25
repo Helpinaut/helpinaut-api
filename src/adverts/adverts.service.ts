@@ -90,37 +90,103 @@ export class AdvertsService {
       maxPrice,
       category,
       offer,
+      useUserLocation,
+      latitude,
+      longitude,
+      maxDistance,
     } = filters;
+
     const take = Number(limit);
     const skip = (Number(page) - 1) * take;
-    const where: any = { status: 'ACTIVE' };
 
-    if (Number(page) < 1 || take < 1 || take > 20) {
-      throw new BadRequestException('invalid pagination parameters');
+    if (take < 1 || take > 50 || Number(page) < 1) {
+      throw new BadRequestException('Invalid pagination settings');
     }
+
+    let userLat: number | null = null;
+    let userLon: number | null = null;
+
+    if (useUserLocation === 'true') {
+      if (!userId) {
+        throw new UnauthorizedException('Login required to use user location');
+      }
+
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { latitude: true, longitude: true },
+      });
+
+      if (user?.latitude == null || user?.longitude == null) {
+        throw new BadRequestException('User has no location set');
+      }
+
+      userLat = Number(user.latitude);
+      userLon = Number(user.longitude);
+    } else if (latitude && longitude) {
+      userLat = Number(latitude);
+      userLon = Number(longitude);
+    }
+
+    const maxKm = maxDistance ? Number(maxDistance) : null;
+    const conditions: string[] = [`"status" = 'ACTIVE'`];
+
     if (title) {
-      where.title = { contains: title, mode: 'insensitive' };
-    }
-    if (category) {
-      where.category = category;
-    }
-    if (minPrice) {
-      where.price = { ...(where.price ?? {}), gte: Number(minPrice) };
-    }
-    if (maxPrice) {
-      where.price = { ...(where.price ?? {}), lte: Number(maxPrice) };
-    }
-    if (offer) {
-      where.offer = offer === 'true';
+      conditions.push(`LOWER("title") LIKE LOWER('%${title}%')`);
     }
 
-    const adverts = await this.prisma.advert.findMany({
-      where,
-      take,
-      skip,
-      include: { owner: { select: { username: true } }, photos: true },
-      orderBy: { createdAt: 'desc' },
-    });
+    if (minPrice) {
+      conditions.push(`"price" >= ${Number(minPrice)}`);
+    }
+
+    if (maxPrice) {
+      conditions.push(`"price" <= ${Number(maxPrice)}`);
+    }
+
+    if (category) {
+      conditions.push(`"category" = '${category}'`);
+    }
+
+    if (offer) {
+      conditions.push(`"offer" = ${offer === 'true'}`);
+    }
+
+    let distanceExpression = '';
+    let distanceWhere = '';
+
+    if (userLat != null && userLon != null) {
+      conditions.push(`"latitude" IS NOT NULL AND "longitude" IS NOT NULL`);
+
+      distanceExpression = `
+      (
+        6371 * acos(
+          cos(radians(${userLat}))
+          * cos(radians("latitude"))
+          * cos(radians("longitude") - radians(${userLon}))
+          + sin(radians(${userLat})) * sin(radians("latitude"))
+        )
+      )
+    `;
+
+      if (maxKm != null) {
+        distanceWhere = `${distanceExpression} <= ${maxKm}`;
+      }
+    }
+
+    const whereClause =
+      conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    const query = `
+    SELECT 
+      *,
+      ${distanceExpression ? `${distanceExpression} AS distance` : 'NULL AS distance'}
+    FROM "Advert"
+    ${whereClause}
+    ${distanceWhere ? `AND ${distanceWhere}` : ''}
+    ${distanceExpression ? 'ORDER BY distance ASC' : 'ORDER BY "createdAt" DESC'}
+    LIMIT ${take} OFFSET ${skip};
+  `;
+
+    const adverts: any[] = await this.prisma.$queryRawUnsafe(query);
 
     const result = await Promise.all(
       adverts.map(async (advert) => {
@@ -129,10 +195,10 @@ export class AdvertsService {
               where: { userId_advertId: { userId, advertId: advert.id } },
             })
           : null;
+
         return new AdvertEntity({
           ...advert,
-          owner: new PublicUserEntity(advert.owner),
-          isOwner: userId ? advert.ownerId === userId : false,
+          isOwner: advert.ownerId === userId,
           isFavorite: !!favorite,
         });
       }),
