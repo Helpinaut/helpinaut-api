@@ -47,6 +47,10 @@ export class AdvertEntity {
 
   @ApiProperty()
   @Expose()
+  distance?: number | null;
+
+  @ApiProperty()
+  @Expose()
   createdAt: Date;
 
   @ApiProperty()

@@ -131,7 +131,8 @@ export class AdvertsService {
     const conditions: string[] = [`"status" = 'ACTIVE'`];
 
     if (title) {
-      conditions.push(`LOWER("title") LIKE LOWER('%${title}%')`);
+      const formattedTitle = title.replace(/'/g, "''");
+      conditions.push(`LOWER("title") LIKE LOWER('%${formattedTitle}%')`);
     }
 
     if (minPrice) {
@@ -150,14 +151,14 @@ export class AdvertsService {
       conditions.push(`"offer" = ${offer === 'true'}`);
     }
 
-    let distanceExpression = '';
-    let distanceWhere = '';
+    let distanceExpression = 'NULL';
+    let distanceFilter = '';
 
     if (userLat != null && userLon != null) {
-      conditions.push(`"latitude" IS NOT NULL AND "longitude" IS NOT NULL`);
+      // conditions.push(`"latitude" IS NOT NULL AND "longitude" IS NOT NULL`);
 
       distanceExpression = `
-      (
+      ROUND(
         6371 * acos(
           cos(radians(${userLat}))
           * cos(radians("latitude"))
@@ -168,21 +169,23 @@ export class AdvertsService {
     `;
 
       if (maxKm != null) {
-        distanceWhere = `${distanceExpression} <= ${maxKm}`;
+        distanceFilter = `${distanceExpression} <= ${maxKm}`;
       }
     }
 
-    const whereClause =
+    const whereSQL =
       conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
     const query = `
     SELECT 
       *,
-      ${distanceExpression ? `${distanceExpression} AS distance` : 'NULL AS distance'}
+      ${distanceExpression} AS distance
     FROM "Advert"
-    ${whereClause}
-    ${distanceWhere ? `AND ${distanceWhere}` : ''}
-    ${distanceExpression ? 'ORDER BY distance ASC' : 'ORDER BY "createdAt" DESC'}
+    ${whereSQL}
+    ${distanceFilter ? `AND ${distanceFilter}` : ''}
+    ORDER BY
+      distance NULLS LAST,
+      "createdAt" DESC
     LIMIT ${take} OFFSET ${skip};
   `;
 
@@ -200,6 +203,7 @@ export class AdvertsService {
           ...advert,
           isOwner: advert.ownerId === userId,
           isFavorite: !!favorite,
+          distance: advert.distance ?? null,
         });
       }),
     );
