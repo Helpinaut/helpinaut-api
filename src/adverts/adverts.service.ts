@@ -155,8 +155,6 @@ export class AdvertsService {
     let distanceFilter = '';
 
     if (userLat != null && userLon != null) {
-      // conditions.push(`"latitude" IS NOT NULL AND "longitude" IS NOT NULL`);
-
       distanceExpression = `
       ROUND(
         6371 * acos(
@@ -169,6 +167,7 @@ export class AdvertsService {
     `;
 
       if (maxKm != null) {
+        conditions.push(`"latitude" IS NOT NULL AND "longitude" IS NOT NULL`);
         distanceFilter = `${distanceExpression} <= ${maxKm}`;
       }
     }
@@ -179,7 +178,12 @@ export class AdvertsService {
     const query = `
     SELECT 
       *,
-      ${distanceExpression} AS distance
+      ${distanceExpression} AS distance,
+      (
+        SELECT COUNT(*)
+        FROM "Favorite"
+        WHERE "Favorite"."advertId" = "Advert"."id"
+      ) AS "favoriteCount"
     FROM "Advert"
     ${whereSQL}
     ${distanceFilter ? `AND ${distanceFilter}` : ''}
@@ -203,6 +207,7 @@ export class AdvertsService {
           ...advert,
           isOwner: advert.ownerId === userId,
           isFavorite: !!favorite,
+          favoriteCount: Number(advert.favoriteCount),
           distance: advert.distance ?? null,
         });
       }),
@@ -219,7 +224,11 @@ export class AdvertsService {
   async findOne(id: string, userId: string | null) {
     const advert = await this.prisma.advert.findUniqueOrThrow({
       where: { id },
-      include: { owner: { select: { username: true } }, photos: true },
+      include: {
+        owner: { select: { username: true } },
+        photos: true,
+        _count: { select: { favorites: true } },
+      },
     });
 
     return new AdvertEntity({
@@ -232,6 +241,7 @@ export class AdvertsService {
             where: { userId_advertId: { userId, advertId: advert.id } },
           }) !== null
         : false,
+      favoriteCount: advert._count.favorites,
     });
   }
 

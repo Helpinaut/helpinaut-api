@@ -65,6 +65,10 @@ export class AdvertEntity {
   @Expose()
   isFavorite: boolean;
 
+  @ApiProperty()
+  @Expose()
+  favoriteCount: number;
+
   /**
    * Private properties
    */
