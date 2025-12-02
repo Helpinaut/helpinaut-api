@@ -94,6 +94,7 @@ export class AdvertsService {
       latitude,
       longitude,
       maxDistance,
+      popular,
     } = filters;
 
     const take = Number(limit);
@@ -183,12 +184,14 @@ export class AdvertsService {
         SELECT COUNT(*)
         FROM "Favorite"
         WHERE "Favorite"."advertId" = "Advert"."id"
-      ) AS "favoriteCount"
+      ) AS "favoriteCount",
+      "viewCount"
     FROM "Advert"
     ${whereSQL}
     ${distanceFilter ? `AND ${distanceFilter}` : ''}
     ORDER BY
       distance NULLS LAST,
+      ${popular === 'true' ? `"viewCount" DESC,` : ''}
       "createdAt" DESC
     LIMIT ${take} OFFSET ${skip};
   `;
@@ -208,6 +211,7 @@ export class AdvertsService {
           isOwner: advert.ownerId === userId,
           isFavorite: !!favorite,
           favoriteCount: Number(advert.favoriteCount),
+          viewCount: advert.viewCount,
           distance: advert.distance ?? null,
         });
       }),
@@ -231,11 +235,22 @@ export class AdvertsService {
       },
     });
 
+    const isOwner = userId === advert.ownerId;
+
+    if (!isOwner) {
+      await this.prisma.advert.update({
+        where: { id },
+        data: { viewCount: { increment: 1 } },
+      });
+
+      advert.viewCount += 1;
+    }
+
     return new AdvertEntity({
       ...advert,
       owner: new PublicUserEntity(advert.owner),
       photos: advert.photos.map((photo) => new PhotoEntity(photo)),
-      isOwner: userId ? advert.ownerId === userId : false,
+      isOwner,
       isFavorite: userId
         ? this.prisma.favorite.findUnique({
             where: { userId_advertId: { userId, advertId: advert.id } },

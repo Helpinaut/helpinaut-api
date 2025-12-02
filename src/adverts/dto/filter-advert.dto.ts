@@ -65,4 +65,9 @@ export class FilterAdvertDto {
   @IsOptional()
   @IsNumberString()
   maxDistance?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBooleanString()
+  popular?: string;
 }
