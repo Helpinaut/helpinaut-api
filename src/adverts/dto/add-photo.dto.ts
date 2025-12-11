@@ -1,12 +1,18 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional } from 'class-validator';
+import { ArrayMaxSize, IsArray, IsOptional } from 'class-validator';
 
+/**
+ * DTO for adding images to an advert.
+ * Accepts up to 10 image files.
+ */
 export class AddPhotoDto {
   @ApiPropertyOptional({
     type: 'array',
     items: { type: 'string', format: 'binary' },
-    description: 'up to 10 image files',
+    description: 'Up to 10 image files',
   })
   @IsOptional()
-  photos?: any[];
+  @IsArray()
+  @ArrayMaxSize(10)
+  photos?: Express.Multer.File[];
 }
