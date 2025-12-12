@@ -1,82 +1,122 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Category, Status } from '@prisma/client';
-import { Exclude, Expose } from 'class-transformer';
-import { PublicUserEntity } from 'src/users/entities/public-user.entity';
+import { Exclude, Expose, plainToInstance } from 'class-transformer';
+import { OwnerSummaryEntity } from 'src/users/entities/owner.entity';
 import { PhotoEntity } from './photo.entity';
 
 export class AdvertEntity {
   constructor(partial: Partial<AdvertEntity>) {
-    Object.assign(this, partial);
+    Object.assign(this, plainToInstance(AdvertEntity, partial));
   }
 
-  @ApiProperty()
+  // Identifiers and basics
+  @ApiProperty({ description: 'Unique identifier of the advert' })
   @Expose()
   id: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: 'Advert title',
+    example: 'Electrician available for home repairs',
+  })
   @Expose()
   title: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: 'Detailed description of the advert',
+    example: 'Certified electrician with 10 years of experience.',
+  })
   @Expose()
   description: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Price of the advert', example: 50 })
   @Expose()
   price: number;
 
-  @ApiProperty({ enum: Category })
+  @ApiProperty({ enum: Category, description: 'Advert category' })
   @Expose()
   category: Category;
 
-  @ApiProperty()
+  @ApiProperty({
+    description:
+      'Indicates if the advert is an offer (true) or a request (false)',
+    example: true,
+  })
   @Expose()
-  offer: boolean;
+  isOffer: boolean;
 
-  @ApiProperty({ required: false, type: [PhotoEntity] })
+  // Relations
+  @ApiProperty({
+    type: [PhotoEntity],
+    description: 'List of advert photos',
+    required: false,
+  })
   @Expose()
   photos?: PhotoEntity[];
 
-  @ApiProperty({ enum: Status })
+  @ApiProperty({
+    type: OwnerSummaryEntity,
+    description: 'Public information of the advert owner',
+  })
+  @Expose()
+  owner: OwnerSummaryEntity;
+
+  // Status and location
+  @ApiProperty({
+    enum: Status,
+    description: 'Current status of the advert',
+    example: Status.ACTIVE,
+  })
   @Expose()
   status: Status;
 
-  @ApiProperty({ type: PublicUserEntity })
-  @Expose()
-  owner: PublicUserEntity;
-
-  @ApiProperty()
+  @ApiProperty({
+    description: 'Distance in KM from user location (calculated)',
+    example: 12.5,
+    required: false,
+  })
   @Expose()
   distance?: number | null;
 
-  @ApiProperty()
+  // Metadata
+  @ApiProperty({ description: 'Date when the advert was created' })
   @Expose()
   createdAt: Date;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Date when the advert was last updated' })
   @Expose()
   updatedAt: Date;
 
-  @ApiProperty()
+  // Derived properties
+  @ApiProperty({
+    description: 'Indicates if the logged user is the owner of the advert',
+    example: false,
+  })
   @Expose()
   isOwner: boolean;
 
-  @ApiProperty()
+  @ApiProperty({
+    description:
+      'Indicates if the advert is marked as favorite by the logged user',
+    example: true,
+  })
   @Expose()
   isFavorite: boolean;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: 'Number of users who marked this advert as favorite',
+    example: 5,
+  })
   @Expose()
   favoriteCount: number;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: 'Number of times the advert has been viewed',
+    example: 12,
+  })
   @Expose()
   viewCount: number;
 
-  /**
-   * Private properties
-   */
-
+  // Private properties (excluded from API responses)
   @Exclude()
   ownerId: string;
 }
