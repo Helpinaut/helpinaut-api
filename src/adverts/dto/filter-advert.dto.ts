@@ -22,6 +22,7 @@ export class FilterAdvertDto {
     example: 16,
   })
   @IsOptional()
+  @Transform(({ value }) => Number(value))
   @Type(() => Number)
   @IsNumber()
   @Min(1)
@@ -33,6 +34,7 @@ export class FilterAdvertDto {
     example: 1,
   })
   @IsOptional()
+  @Transform(({ value }) => Number(value))
   @Type(() => Number)
   @IsNumber()
   @Min(1)
@@ -43,13 +45,16 @@ export class FilterAdvertDto {
     example: 'Classes',
   })
   @IsOptional()
-  @Transform(({ value }) => value.trim().toLowerCase())
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.trim().toLowerCase() : value,
+  )
   @IsString()
   @MaxLength(50)
   title?: string;
 
   @ApiPropertyOptional({ description: 'Minimum price', example: 10 })
   @IsOptional()
+  @Transform(({ value }) => Number(value))
   @Type(() => Number)
   @IsNumber()
   @Min(0)
@@ -57,6 +62,7 @@ export class FilterAdvertDto {
 
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(({ value }) => Number(value))
   @Type(() => Number)
   @IsNumber()
   @Min(0)
@@ -73,6 +79,7 @@ export class FilterAdvertDto {
     example: true,
   })
   @IsOptional()
+  @Transform(({ value }) => value === 'true')
   @Type(() => Boolean)
   @IsBoolean()
   isOffer?: boolean;
@@ -82,6 +89,7 @@ export class FilterAdvertDto {
     example: true,
   })
   @IsOptional()
+  @Transform(({ value }) => value === 'true')
   @Type(() => Boolean)
   @IsBoolean()
   useUserLocation?: boolean;
@@ -91,6 +99,7 @@ export class FilterAdvertDto {
     example: 37.3891,
   })
   @IsOptional()
+  @Transform(({ value }) => Number(value))
   @Type(() => Number)
   @IsNumber()
   @Min(-90)
@@ -102,6 +111,7 @@ export class FilterAdvertDto {
     example: -5.9845,
   })
   @IsOptional()
+  @Transform(({ value }) => Number(value))
   @Type(() => Number)
   @IsNumber()
   @Min(-180)
@@ -110,6 +120,7 @@ export class FilterAdvertDto {
 
   @ApiPropertyOptional({ description: 'Maximum distance in KM', example: 30 })
   @IsOptional()
+  @Transform(({ value }) => Number(value))
   @Type(() => Number)
   @Min(1)
   @IsNumber()
@@ -120,6 +131,7 @@ export class FilterAdvertDto {
     example: true,
   })
   @IsOptional()
+  @Transform(({ value }) => value === 'true')
   @Type(() => Boolean)
   @IsBoolean()
   popular?: boolean;

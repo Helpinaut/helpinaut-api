@@ -15,6 +15,7 @@ import {
 import { FilesInterceptor } from '@nestjs/platform-express';
 import {
   ApiBearerAuth,
+  ApiBody,
   ApiConsumes,
   ApiCreatedResponse,
   ApiOkResponse,
@@ -22,13 +23,11 @@ import {
 } from '@nestjs/swagger';
 import { diskStorage } from 'multer';
 import path, { join } from 'path';
-
 import { AdvertsService } from './adverts.service';
 import { AddPhotoDto } from './dto/add-photo.dto';
 import { CreateAdvertDto } from './dto/create-advert.dto';
 import { UpdateAdvertDto } from './dto/update-advert.dto';
 import { AdvertEntity } from './entities/advert.entity';
-import { ImageFilePipe } from './pipes/image-file.pipe';
 import {
   JwtAuthGuard,
   OptionalJwtAuthGuard,
@@ -36,6 +35,7 @@ import {
 import { GetUser } from 'src/auth/decorators/get-user.decorator';
 import { DeleteFileOnErrorInterceptor } from 'src/utils/delete-file-on-error.interceptor';
 import { FilterAdvertDto } from './dto/filter-advert.dto';
+import { ImageValidationPipe } from './pipes/image-validation.pipe';
 
 const storage = diskStorage({
   destination: join(process.cwd(), String(process.env.UPLOAD_DIR)),
@@ -48,6 +48,12 @@ const storage = diskStorage({
 export class AdvertsController {
   constructor(private readonly advertsService: AdvertsService) {}
 
+  private buildPhotoPaths(files: Express.Multer.File[]): string[] {
+    return files?.length
+      ? files.map((file) => `/${process.env.UPLOAD_DIR}/${file.filename}`)
+      : [];
+  }
+
   @Post()
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(
@@ -55,51 +61,60 @@ export class AdvertsController {
     DeleteFileOnErrorInterceptor,
   )
   @ApiBearerAuth()
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        description: { type: 'string' },
+        price: { type: 'number' },
+        category: { type: 'string' },
+        photos: { type: 'string', format: 'binary' },
+      },
+    },
+  })
   @ApiConsumes('multipart/form-data')
   @ApiCreatedResponse({ type: AdvertEntity })
   async create(
-    @UploadedFiles(new ImageFilePipe()) files: Express.Multer.File[],
+    @UploadedFiles(new ImageValidationPipe()) files: Express.Multer.File[],
     @Body() createAdvertDto: CreateAdvertDto,
     @GetUser('id') userId: string,
   ) {
-    const photoPaths = files?.length
-      ? files.map((file) => `/${process.env.UPLOAD_DIR}/${file.filename}`)
-      : [];
-    return this.advertsService.create(createAdvertDto, userId, photoPaths);
+    return this.advertsService.create(
+      createAdvertDto,
+      userId,
+      this.buildPhotoPaths(files),
+    );
   }
 
   @Get()
   @UseGuards(OptionalJwtAuthGuard)
   @ApiBearerAuth()
   @ApiOkResponse({ type: AdvertEntity, isArray: true })
-  async findAll(
+  async getAll(
     @GetUser('id') userId: string | null,
     @Query() filters: FilterAdvertDto,
   ) {
-    return this.advertsService.findAll(userId, filters);
+    return this.advertsService.getAll(userId, filters);
   }
 
   @Get(':id')
   @UseGuards(OptionalJwtAuthGuard)
   @ApiBearerAuth()
   @ApiOkResponse({ type: AdvertEntity })
-  async findOne(@Param('id') id: string, @GetUser('id') userId: string | null) {
-    return this.advertsService.findOne(id, userId);
+  async getById(@Param('id') id: string, @GetUser('id') userId: string | null) {
+    return this.advertsService.getById(id, userId);
   }
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(
-    FilesInterceptor('photos', 10, { storage }),
-    DeleteFileOnErrorInterceptor,
-  )
   @ApiBearerAuth()
   @ApiConsumes('multipart/form-data')
   @ApiOkResponse({ type: AdvertEntity })
   async update(
     @Body() updateAdvertDto: UpdateAdvertDto,
-    @Param('id') id: string,
     @GetUser('id') userId: string,
+    @Param('id') id: string,
   ) {
     return this.advertsService.update(id, userId, updateAdvertDto);
   }
@@ -108,14 +123,14 @@ export class AdvertsController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOkResponse({ type: AdvertEntity })
-  async remove(@Param('id') id: string, @GetUser('id') userId: string) {
-    return this.advertsService.remove(id, userId);
+  async delete(@Param('id') id: string, @GetUser('id') userId: string) {
+    return this.advertsService.delete(id, userId);
   }
 
   @Get('categories')
   @ApiOkResponse({ type: String, isArray: true })
-  async findCategories() {
-    return this.advertsService.findCategories();
+  async getCategories() {
+    return this.advertsService.getCategories();
   }
 
   @Post(':id/photos')
@@ -125,44 +140,57 @@ export class AdvertsController {
     DeleteFileOnErrorInterceptor,
   )
   @ApiBearerAuth()
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        description: { type: 'string' },
+        price: { type: 'number' },
+        category: { type: 'string' },
+        photos: { type: 'string', format: 'binary' },
+      },
+    },
+  })
   @ApiConsumes('multipart/form-data')
   @ApiOkResponse({ type: AdvertEntity })
-  async addPhoto(
-    @UploadedFiles(new ImageFilePipe()) files: Express.Multer.File[],
+  async uploadPhoto(
+    @UploadedFiles(new ImageValidationPipe()) files: Express.Multer.File[],
     @Body() addPhotoDto: AddPhotoDto,
     @Param('id') id: string,
     @GetUser('id') userId: string,
   ) {
-    const photoPaths = files?.length
-      ? files.map((file) => `/${process.env.UPLOAD_DIR}/${file.filename}`)
-      : [];
-    return this.advertsService.addPhoto(id, userId, photoPaths);
+    return this.advertsService.uploadPhoto(
+      id,
+      userId,
+      this.buildPhotoPaths(files),
+    );
   }
 
   @Delete(':id/photos/:photoId')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOkResponse({ type: AdvertEntity })
-  async removePhoto(
+  async deletePhoto(
     @Param('id') id: string,
     @Param('photoId') photoId: string,
     @GetUser('id') userId: string,
   ) {
-    return this.advertsService.removePhoto(id, photoId, userId);
+    return this.advertsService.deletePhoto(id, photoId, userId);
   }
 
   @Get('favorites/me')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOkResponse({ type: AdvertEntity })
-  async findFavorites(@GetUser('id') userId: string) {
-    return this.advertsService.findFavorites(userId);
+  @ApiOkResponse({ type: AdvertEntity, isArray: true })
+  async getFavorites(@GetUser('id') userId: string) {
+    return this.advertsService.getFavorites(userId);
   }
 
   @Post(':id/favorites')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOkResponse({ description: 'advert added to favorites' })
+  @ApiOkResponse({ type: AdvertEntity })
   async addFavorite(@Param('id') id: string, @GetUser('id') userId: string) {
     return this.advertsService.addFavorite(id, userId);
   }
@@ -170,8 +198,8 @@ export class AdvertsController {
   @Delete(':id/favorites')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOkResponse({ description: 'advert removed from favorites' })
-  async removeFavorite(@Param('id') id: string, @GetUser('id') userId: string) {
-    return this.advertsService.removeFavorite(id, userId);
+  @ApiOkResponse({ type: AdvertEntity })
+  async deleteFavorite(@Param('id') id: string, @GetUser('id') userId: string) {
+    return this.advertsService.deleteFavorite(id, userId);
   }
 }
