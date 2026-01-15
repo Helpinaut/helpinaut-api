@@ -24,6 +24,8 @@ import {
 import { diskStorage } from 'multer';
 import path, { join } from 'path';
 import { AdvertsService } from './adverts.service';
+import { FavoritesService } from './services/favorites.service';
+import { PhotosService } from './services/photos.service';
 import { AddPhotoDto } from './dto/add-photo.dto';
 import { CreateAdvertDto } from './dto/create-advert.dto';
 import { UpdateAdvertDto } from './dto/update-advert.dto';
@@ -46,7 +48,11 @@ const storage = diskStorage({
 @Controller('adverts')
 @ApiTags('adverts')
 export class AdvertsController {
-  constructor(private readonly advertsService: AdvertsService) {}
+  constructor(
+    private readonly advertsService: AdvertsService,
+    private readonly favoritesService: FavoritesService,
+    private readonly photosService: PhotosService,
+  ) {}
 
   private buildPhotoPaths(files: Express.Multer.File[]): string[] {
     return files?.length
@@ -160,7 +166,7 @@ export class AdvertsController {
     @Param('id') id: string,
     @GetUser('id') userId: string,
   ) {
-    return this.advertsService.uploadPhoto(
+    return this.photosService.uploadPhoto(
       id,
       userId,
       this.buildPhotoPaths(files),
@@ -176,7 +182,7 @@ export class AdvertsController {
     @Param('photoId') photoId: string,
     @GetUser('id') userId: string,
   ) {
-    return this.advertsService.deletePhoto(id, photoId, userId);
+    return this.photosService.deletePhoto(id, photoId, userId);
   }
 
   @Get('favorites/me')
@@ -184,7 +190,7 @@ export class AdvertsController {
   @ApiBearerAuth()
   @ApiOkResponse({ type: AdvertEntity, isArray: true })
   async getFavorites(@GetUser('id') userId: string) {
-    return this.advertsService.getFavorites(userId);
+    return this.favoritesService.getFavorites(userId);
   }
 
   @Post(':id/favorites')
@@ -192,7 +198,7 @@ export class AdvertsController {
   @ApiBearerAuth()
   @ApiOkResponse({ type: AdvertEntity })
   async addFavorite(@Param('id') id: string, @GetUser('id') userId: string) {
-    return this.advertsService.addFavorite(id, userId);
+    return this.favoritesService.addFavorite(id, userId);
   }
 
   @Delete(':id/favorites')
@@ -200,6 +206,6 @@ export class AdvertsController {
   @ApiBearerAuth()
   @ApiOkResponse({ type: AdvertEntity })
   async deleteFavorite(@Param('id') id: string, @GetUser('id') userId: string) {
-    return this.advertsService.deleteFavorite(id, userId);
+    return this.favoritesService.deleteFavorite(id, userId);
   }
 }
