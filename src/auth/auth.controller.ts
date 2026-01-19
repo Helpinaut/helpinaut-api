@@ -11,7 +11,7 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('login')
-  @ApiOkResponse({ description: 'Returns a JWT access token' })
+  @ApiOkResponse({ description: 'JWT access token successfully generated' })
   async login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
   }
