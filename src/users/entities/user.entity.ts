@@ -1,5 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Advert, Favorite } from '@prisma/client';
 import { Exclude, Expose, plainToInstance } from 'class-transformer';
 import { AdvertEntity } from 'src/adverts/entities/advert.entity';
 import { FavoriteEntity } from 'src/adverts/entities/favorite.entity';
@@ -9,6 +8,7 @@ export class UserEntity {
     Object.assign(this, plainToInstance(UserEntity, partial));
   }
 
+  // Identifiers and basics
   @ApiProperty({ description: 'Unique identifier of the user' })
   @Expose()
   id: string;
@@ -25,6 +25,15 @@ export class UserEntity {
   username: string;
 
   @ApiProperty({
+    description: 'Postal code of the user',
+    example: '41001',
+    required: false,
+  })
+  @Expose()
+  postalCode: string | null;
+
+  // Relations
+  @ApiProperty({
     description: 'List of adverts created by the user',
     type: [AdvertEntity],
   })
@@ -37,19 +46,14 @@ export class UserEntity {
   })
   favorites: FavoriteEntity[];
 
-  @ApiProperty({
-    description: 'Postal code of the user',
-    example: '41011',
-    required: false,
-  })
-  postalCode: string | null;
-
+  // Location
   @ApiProperty({ description: 'Latitude of the user', required: false })
   latitude: number | null;
 
   @ApiProperty({ description: 'Longitude of the user', required: false })
   longitude: number | null;
 
+  // Metadata
   @ApiProperty({ description: 'Date when the user account was created' })
   createdAt: Date;
 
