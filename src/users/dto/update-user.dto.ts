@@ -7,6 +7,10 @@ import {
   MinLength,
 } from 'class-validator';
 
+/**
+ * DTO for updating user profile information.
+ * All fields are optional, and only the provided ones will be updated.
+ */
 export class UpdateUserDto {
   @ApiPropertyOptional()
   @IsOptional()

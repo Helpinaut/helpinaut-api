@@ -7,19 +7,35 @@ import {
   MinLength,
 } from 'class-validator';
 
+/**
+ * DTO used for creating a new user.
+ * This is consumed by `UsersService.create()` and should not be exposed directly
+ * to public API routes. Public registrations uses SignUpDto instead.
+ */
 export class CreateUserDto {
-  @ApiProperty({ required: true })
+  @ApiProperty({
+    description: 'Unique email address of the user',
+    example: 'user@example.com',
+  })
   @IsNotEmpty()
   @IsEmail()
   email: string;
 
-  @ApiProperty({ required: true })
+  @ApiProperty({
+    maxLength: 16,
+    description: 'Public and unique username chosen by the user',
+    example: 'john',
+  })
   @IsNotEmpty()
   @IsString()
   @MaxLength(16)
   username: string;
 
-  @ApiProperty({ required: true })
+  @ApiProperty({
+    minLength: 8,
+    description: 'Raw password that will be hashed before storing',
+    example: 'strong-password-123',
+  })
   @IsNotEmpty()
   @IsString()
   @MinLength(8)
