@@ -1,10 +1,23 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import axios from 'axios';
 
 @Injectable()
 export class GeocodingService {
   private readonly baseUrl = 'https://nominatim.openstreetmap.org/search';
 
+  /**
+   * Resolves a postal code into latitude and longitude geographic coordinates
+   * using the Nominatim (OpenStreetMap) API.
+   * @param postalCode - Postal code to resolve.
+   * @param countryCode - ISO country code (default: 'es').
+   * @throws BadRequestException if no location is found.
+   * @throws ServiceUnavailableException if the geocoding service fails.
+   * @returns Parsed coordinates and name location.
+   */
   async fromPostalCode(postalCode: string, countryCode: string = 'es') {
     try {
       const response = await axios.get(this.baseUrl, {
@@ -21,7 +34,7 @@ export class GeocodingService {
 
       if (!response.data || response.data.length === 0) {
         throw new BadRequestException(
-          `could not find any location with postal code "${postalCode}"`,
+          `No location  found for postal code "${postalCode}"`,
         );
       }
 
@@ -33,7 +46,9 @@ export class GeocodingService {
         displayName,
       };
     } catch (error) {
-      throw error;
+      throw new ServiceUnavailableException(
+        'Geocoding service is temporarily unavailable',
+      );
     }
   }
 }
