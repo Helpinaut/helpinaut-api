@@ -1,70 +1,60 @@
 import {
   Controller,
   Get,
-  Post,
   Body,
   Patch,
   Param,
   Delete,
   UseGuards,
 } from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiCreatedResponse,
-  ApiOkResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { UserEntity } from './entities/user.entity';
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
 import { GetUser } from 'src/auth/decorators/get-user.decorator';
 import { UpdateLocationDto } from './dto/update-location.dto';
+import { OwnerDetailsEntity } from './entities/owner.entity';
 
 @Controller('users')
 @ApiTags('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Post()
-  @ApiCreatedResponse({ type: UserEntity })
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
-  }
-
-  @Get()
+  @Get('me')
   @UseGuards(JwtAuthGuard)
-  @ApiOkResponse({ type: UserEntity, isArray: true })
-  findAll() {
-    return this.usersService.findAll();
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: UserEntity })
+  async getMe(@GetUser('id') id: string) {
+    return this.usersService.getMe(id);
   }
 
   @Get(':id')
-  @UseGuards(JwtAuthGuard)
-  @ApiOkResponse({ type: UserEntity })
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne(id);
+  @ApiOkResponse({ type: OwnerDetailsEntity })
+  async getById(@Param('id') id: string) {
+    return this.usersService.getById(id);
   }
 
-  @Patch(':id')
+  @Patch('me')
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOkResponse({ type: UserEntity })
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+  update(@Body() updateUserDto: UpdateUserDto, @GetUser('id') id: string) {
     return this.usersService.update(id, updateUserDto);
   }
 
-  @Delete(':id')
-  @UseGuards(JwtAuthGuard)
-  @ApiOkResponse({ type: UserEntity })
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(id);
-  }
-
-  @Patch(':id/location')
+  @Delete('me')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOkResponse({ description: 'location successfully updated' })
+  @ApiOkResponse({ type: UserEntity })
+  delete(@GetUser('id') id: string) {
+    return this.usersService.delete(id);
+  }
+
+  @Patch('me/location')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOkResponse({ description: 'Location successfully updated' })
   async updateLocation(
     @GetUser('id') id: string,
     @Body() updateLocationDto: UpdateLocationDto,
