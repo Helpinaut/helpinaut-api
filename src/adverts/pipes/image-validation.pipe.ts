@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, PipeTransform } from '@nestjs/common';
 import { extname } from 'path';
+import { UploadConfig } from 'src/config/upload.config';
 
 @Injectable()
 export class ImageValidationPipe implements PipeTransform {
@@ -19,7 +20,7 @@ export class ImageValidationPipe implements PipeTransform {
     }
 
     // File size validation
-    const maxSize = 5 * 2024 * 2024;
+    const maxSize = UploadConfig.MAX_SIZE * 2024 * 2024;
 
     if (file.size > maxSize) {
       throw new BadRequestException(

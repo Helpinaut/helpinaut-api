@@ -11,6 +11,7 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
+import { AdvertConfig } from 'src/config/advert.config';
 
 /**
  * DTO for filtering adverts.
@@ -18,7 +19,7 @@ import {
  */
 export class FilterAdvertDto {
   @ApiPropertyOptional({
-    description: 'Number of results per page (max 20)',
+    description: `Number of results per page (max ${AdvertConfig.MAX_LIMIT})`,
     example: 16,
   })
   @IsOptional()
@@ -26,7 +27,7 @@ export class FilterAdvertDto {
   @Type(() => Number)
   @IsNumber()
   @Min(1)
-  @Max(20)
+  @Max(AdvertConfig.MAX_LIMIT)
   limit?: number;
 
   @ApiPropertyOptional({
@@ -37,7 +38,7 @@ export class FilterAdvertDto {
   @Transform(({ value }) => Number(value))
   @Type(() => Number)
   @IsNumber()
-  @Min(1)
+  @Min(AdvertConfig.MIN_PRICE)
   page?: number;
 
   @ApiPropertyOptional({
@@ -49,7 +50,7 @@ export class FilterAdvertDto {
     typeof value === 'string' ? value.trim().toLowerCase() : value,
   )
   @IsString()
-  @MaxLength(50)
+  @MaxLength(AdvertConfig.MAX_TITLE)
   title?: string;
 
   @ApiPropertyOptional({ description: 'Minimum price', example: 10 })
@@ -57,7 +58,7 @@ export class FilterAdvertDto {
   @Transform(({ value }) => Number(value))
   @Type(() => Number)
   @IsNumber()
-  @Min(0)
+  @Min(AdvertConfig.MIN_PRICE)
   minPrice?: number;
 
   @ApiPropertyOptional()
@@ -66,7 +67,7 @@ export class FilterAdvertDto {
   @Type(() => Number)
   @IsNumber()
   @Min(0)
-  @Max(9999)
+  @Max(AdvertConfig.MAX_PRICE)
   maxPrice?: number;
 
   @ApiPropertyOptional({ enum: Category, description: 'Filter by category' })

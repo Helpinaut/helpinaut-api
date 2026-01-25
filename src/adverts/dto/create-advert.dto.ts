@@ -15,6 +15,7 @@ import {
   Min,
   MinLength,
 } from 'class-validator';
+import { AdvertConfig } from 'src/config/advert.config';
 
 /**
  * DTO for creating a new advert.
@@ -23,42 +24,42 @@ import {
 export class CreateAdvertDto {
   @ApiProperty({
     required: true,
-    maxLength: 50,
-    description: 'Title of the advert (max length 50 characters)',
+    maxLength: AdvertConfig.MAX_TITLE,
+    description: `Title of the advert (max length ${AdvertConfig.MAX_TITLE} characters)`,
     example: 'Electrician available for home repairs',
   })
   @Transform(({ value }) => value?.trim())
   @IsNotEmpty()
   @IsString()
   @MinLength(5)
-  @MaxLength(50)
+  @MaxLength(AdvertConfig.MAX_TITLE)
   title: string;
 
   @ApiProperty({
     required: true,
-    maxLength: 500,
-    description: 'Detailed description (max length 500 characters)',
+    maxLength: AdvertConfig.MAX_DESCRIPTION,
+    description: `Detailed description (max length ${AdvertConfig.MAX_DESCRIPTION} characters)`,
     example: 'Certified electrician with 10 years of experience.',
   })
   @Transform(({ value }) => value.trim())
   @IsNotEmpty()
   @IsString()
   @MinLength(20)
-  @MaxLength(500)
+  @MaxLength(AdvertConfig.MAX_DESCRIPTION)
   description: string;
 
   @ApiProperty({
     required: true,
-    minimum: 1,
-    maximum: 9999,
-    description: 'Price of the advert (from 1 to 9999)',
+    minimum: AdvertConfig.MIN_PRICE,
+    maximum: AdvertConfig.MAX_PRICE,
+    description: `Price of the advert (from ${AdvertConfig.MIN_PAGE} to ${AdvertConfig.MAX_PRICE})`,
     example: 50,
   })
   @Type(() => Number)
   @IsNotEmpty()
   @IsNumber()
-  @Min(1)
-  @Max(9999)
+  @Min(AdvertConfig.MIN_PRICE)
+  @Max(AdvertConfig.MAX_PRICE)
   price: number;
 
   @ApiProperty({ required: true, enum: Category })

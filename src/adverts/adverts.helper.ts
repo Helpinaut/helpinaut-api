@@ -1,5 +1,6 @@
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { FilterAdvertDto } from 'src/adverts/dto/filter-advert.dto';
+import { AdvertConfig } from 'src/config/advert.config';
 
 /**
  * Ensures that the given resource belongs to the specified user.
@@ -56,7 +57,8 @@ export function parseEnumValue<T extends Record<string, string>>(
  * @returns Object with `limit` and `offset` values for SQL queries.
  */
 export function getPagination(filters: FilterAdvertDto) {
-  const { limit = 20, page = 1 } = filters;
+  const { limit = AdvertConfig.MAX_LIMIT, page = AdvertConfig.MIN_PAGE } =
+    filters;
 
   return { limit, offset: (page - 1) * limit };
 }
