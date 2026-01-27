@@ -137,7 +137,7 @@ export class AdvertsService {
       popular,
     } = params;
 
-    return this.prisma.$queryRaw<any[]>(Prisma.sql`
+    const advertsRaw = this.prisma.$queryRaw<any[]>(Prisma.sql`
         SELECT
           "Advert".*,
           (
@@ -154,7 +154,7 @@ export class AdvertsService {
             WHEN "FavUser"."id" IS NULL THEN false
             ELSE true
           END AS "isFavorite",
-          COUNT("FavAll"."id") AS "favoriteCount",
+          COUNT("FavAll"."id") AS "favoriteCount"
         FROM "Advert"
         JOIN "User" ON "Advert"."ownerId" = "User"."id"
         LEFT JOIN "Favorite" "FavAll"
@@ -174,6 +174,8 @@ export class AdvertsService {
           "Advert"."createdAt" DESC
         LIMIT ${limit} OFFSET ${offset};
       `);
+
+    return advertsRaw;
   }
 
   /**

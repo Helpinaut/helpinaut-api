@@ -18,9 +18,7 @@ export const GetUser = createParamDecorator(
     const user = request.user;
 
     if (!user) {
-      throw new Error(
-        'GetUser decorator used without an authenticated user in the request',
-      );
+      return null;
     }
 
     return data ? user[data] : user;

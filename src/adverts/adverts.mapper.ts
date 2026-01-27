@@ -63,12 +63,15 @@ export class AdvertsMapper {
    * @returns AdvertEntity with minimal owner data.
    */
   toAdvertSummaryEntity(advert: any, derived: DerivedValues) {
+    const { ownerId, ownerUsername, thumbnailUrl, ...data } = advert;
+
     return new AdvertEntity({
-      ...advert,
-      owner: this.toOwnerSummaryEntity(advert.owner),
-      photos: advert.thumbnailUrl
-        ? [new PhotoEntity({ url: advert.thumbnailUrl })]
-        : [],
+      ...data,
+      owner: this.toOwnerSummaryEntity({
+        id: ownerId,
+        username: ownerUsername,
+      }),
+      photos: thumbnailUrl ? [new PhotoEntity({ url: thumbnailUrl })] : [],
       isOwner: derived.isOwner,
       isFavorite: derived.isFavorite,
       favoriteCount: derived.favoriteCount,
