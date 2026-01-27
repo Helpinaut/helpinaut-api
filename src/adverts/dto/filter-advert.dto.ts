@@ -80,7 +80,11 @@ export class FilterAdvertDto {
     example: true,
   })
   @IsOptional()
-  @Transform(({ value }) => value === 'true')
+  @Transform(({ value }) => {
+    if (value === 'true' || value === true) return true;
+    if (value === 'false' || value === false) return false;
+    return undefined;
+  })
   @Type(() => Boolean)
   @IsBoolean()
   isOffer?: boolean;

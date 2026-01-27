@@ -75,12 +75,17 @@ export class AdvertsService {
     }
 
     if (filters.category) {
-      where.push(Prisma.sql`"Advert"."category" = ${filters.category}`);
+      where.push(
+        Prisma.sql`"Advert"."category" = ${Prisma.sql`${filters.category}::"Category"`}`,
+      );
     }
 
     if (filters.isOffer != null) {
-      where.push(Prisma.sql`"Advert"."offer" = ${filters.isOffer}`);
+      where.push(
+        Prisma.sql`"Advert"."isOffer" = ${Prisma.sql`${filters.isOffer}::boolean`}`,
+      );
     }
+    console.log('isOffer:', filters.isOffer, typeof filters.isOffer);
 
     let distanceSql: Prisma.Sql = Prisma.sql`NULL`;
     let distanceFilterSql: Prisma.Sql | null = null;
