@@ -11,7 +11,7 @@ export class LoginDto {
     description: 'Email address with the user account',
   })
   @IsNotEmpty()
-  @IsEmail()
+  @IsEmail(undefined, { message: 'Invalid email format' })
   email: string;
 
   @ApiProperty({
@@ -21,6 +21,6 @@ export class LoginDto {
   })
   @IsNotEmpty()
   @IsString()
-  @MinLength(8)
+  @MinLength(8, { message: 'Password must be longer than 8 characters' })
   password: string;
 }

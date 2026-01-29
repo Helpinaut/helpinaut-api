@@ -85,7 +85,6 @@ export class AdvertsService {
         Prisma.sql`"Advert"."isOffer" = ${Prisma.sql`${filters.isOffer}::boolean`}`,
       );
     }
-    console.log('isOffer:', filters.isOffer, typeof filters.isOffer);
 
     let distanceSql: Prisma.Sql = Prisma.sql`NULL`;
     let distanceFilterSql: Prisma.Sql | null = null;
