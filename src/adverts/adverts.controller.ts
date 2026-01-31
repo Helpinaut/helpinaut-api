@@ -38,9 +38,10 @@ import { GetUser } from 'src/auth/decorators/get-user.decorator';
 import { DeleteFileOnErrorInterceptor } from 'src/utils/delete-file-on-error.interceptor';
 import { FilterAdvertDto } from './dto/filter-advert.dto';
 import { ImageValidationPipe } from './pipes/image-validation.pipe';
+import { UploadConfig } from 'src/config/upload.config';
 
 const storage = diskStorage({
-  destination: join(process.cwd(), String(process.env.UPLOAD_DIR)),
+  destination: join(process.cwd(), String(UploadConfig.DIR)),
   filename: (_, file, cb) =>
     cb(null, `${Date.now()}-${randomUUID()}${path.extname(file.originalname)}`),
 });
@@ -56,7 +57,7 @@ export class AdvertsController {
 
   private buildPhotoPaths(files: Express.Multer.File[]): string[] {
     return files?.length
-      ? files.map((file) => `/${process.env.UPLOAD_DIR}/${file.filename}`)
+      ? files.map((file) => `/${UploadConfig.DIR}/${file.filename}`)
       : [];
   }
 
