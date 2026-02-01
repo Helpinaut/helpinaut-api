@@ -202,12 +202,6 @@ export class AdvertsService {
       select: { latitude: true, longitude: true },
     });
 
-    if (!user.latitude || !user.longitude) {
-      throw new BadRequestException(
-        'User must set location before creating adverts',
-      );
-    }
-
     const createdAdvert = await this.prisma.advert.create({
       data: {
         ...createAdvertDto,

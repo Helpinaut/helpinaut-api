@@ -56,11 +56,17 @@ export class UsersService {
     );
 
     const hashedPassword = await bcrypt.hash(createUserDto.password, 12);
+    const coords = await this.geocoding.fromPostalCode(
+      createUserDto.postalCode,
+    );
     const newUser = await this.prisma.user.create({
       data: {
         email: createUserDto.email,
         username: createUserDto.username,
         password: hashedPassword,
+        postalCode: createUserDto.postalCode,
+        latitude: coords.latitude,
+        longitude: coords.longitude,
       },
     });
 

@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   IsEmail,
   IsNotEmpty,
+  IsPostalCode,
   IsString,
   MaxLength,
   MinLength,
@@ -38,6 +39,15 @@ export class CreateUserDto {
   })
   @IsNotEmpty()
   @IsString()
-  @MinLength(8)
+  @MinLength(8, {})
   password: string;
+
+  @ApiProperty({
+    description: 'Spanish postal code used to update the user location',
+    example: '41001',
+  })
+  @IsString()
+  @IsNotEmpty()
+  @IsPostalCode('ES')
+  postalCode: string;
 }

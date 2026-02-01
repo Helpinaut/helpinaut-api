@@ -1,7 +1,40 @@
-import { PrismaClient, Category } from '@prisma/client';
+import { PrismaClient, Category, User, Advert } from '@prisma/client';
+import axios from 'axios';
 import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
+
+async function fromPostalCode(postalCode: string, countryCode: string = 'es') {
+  const baseUrl = 'https://nominatim.openstreetmap.org/search';
+
+  try {
+    const response = await axios.get(baseUrl, {
+      params: {
+        q: `${postalCode} Spain`,
+        format: 'json',
+        limit: 1,
+        countrycodes: countryCode,
+      },
+      headers: {
+        'User-Agent': 'Helpinaut/1.0 (helpinaut.app)',
+      },
+    });
+
+    if (!response.data || response.data.length === 0) {
+      throw new Error(`No location  found for postal code "${postalCode}"`);
+    }
+
+    const { lat, lon, displayName } = response.data[0];
+
+    return {
+      latitude: parseFloat(lat),
+      longitude: parseFloat(lon),
+      displayName,
+    };
+  } catch (error) {
+    throw new Error('Geocoding service is temporarily unavailable');
+  }
+}
 
 /**
  * Deletes all records from the database to reset it before seeding.
@@ -22,35 +55,49 @@ async function seedDatabase() {
     await resetDatabase();
 
     // Insert users
-    const users = await Promise.all([
-      prisma.user.create({
+    const users: User[] = [];
+    const usersData = [
+      {
+        email: 'john.doe@email.com',
+        username: 'john',
+        password: '12345678',
+        postalCode: '41011',
+      },
+      {
+        email: 'jane.doe@email.com',
+        username: 'jane',
+        password: '12345678',
+        postalCode: '41012',
+      },
+      {
+        email: 'maria.smith@email.com',
+        username: 'maria',
+        password: '12345678',
+        postalCode: '41013',
+      },
+    ];
+
+    for (const user of usersData) {
+      const hashedPassword = await bcrypt.hash(user.password, 12);
+      const coords = await fromPostalCode(user.postalCode);
+      const created = await prisma.user.create({
         data: {
-          email: 'john.doe@email.com',
-          username: 'john',
-          password: await bcrypt.hash('12345678', 12),
-          postalCode: '41011',
+          email: user.email,
+          username: user.username,
+          password: hashedPassword,
+          postalCode: user.postalCode,
+          latitude: coords.latitude,
+          longitude: coords.longitude,
         },
-      }),
-      prisma.user.create({
-        data: {
-          email: 'jane.doe@email.com',
-          username: 'jane',
-          password: await bcrypt.hash('12345678', 12),
-          postalCode: '41012',
-        },
-      }),
-      prisma.user.create({
-        data: {
-          email: 'maria.smith@email.com',
-          username: 'maria',
-          password: await bcrypt.hash('12345678', 12),
-          postalCode: '41013',
-        },
-      }),
-    ]);
+      });
+
+      users.push(created);
+    }
 
     console.log(`Inserted ${users.length} users`);
 
+    // Insert adverts
+    const adverts: Advert[] = [];
     const advertsData = [
       {
         title: 'Plumbing services',
@@ -86,10 +133,18 @@ async function seedDatabase() {
       },
     ];
 
-    // Insert adverts
-    const adverts = await Promise.all(
-      advertsData.map((advert) => prisma.advert.create({ data: advert })),
-    );
+    for (const advert of advertsData) {
+      const owner = users.find((u) => u.id === advert.ownerId)!;
+      const created = await prisma.advert.create({
+        data: {
+          ...advert,
+          latitude: owner.latitude,
+          longitude: owner.longitude,
+        },
+      });
+
+      adverts.push(created);
+    }
 
     console.log(`Inserted ${adverts.length} adverts`);
   } catch (error) {

@@ -27,10 +27,9 @@ export class UserEntity {
   @ApiProperty({
     description: 'Postal code of the user',
     example: '41001',
-    required: false,
   })
   @Expose()
-  postalCode: string | null;
+  postalCode: string;
 
   // Relations
   @ApiProperty({
@@ -48,10 +47,10 @@ export class UserEntity {
 
   // Location
   @ApiProperty({ description: 'Latitude of the user', required: false })
-  latitude: number | null;
+  latitude: number;
 
   @ApiProperty({ description: 'Longitude of the user', required: false })
-  longitude: number | null;
+  longitude: number;
 
   // Metadata
   @ApiProperty({ description: 'Date when the user account was created' })
