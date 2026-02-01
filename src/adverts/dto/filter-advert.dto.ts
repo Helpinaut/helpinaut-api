@@ -94,7 +94,6 @@ export class FilterAdvertDto {
     example: true,
   })
   @IsOptional()
-  @Transform(({ value }) => value === 'true')
   @Type(() => Boolean)
   @IsBoolean()
   useUserLocation?: boolean;

@@ -1,4 +1,5 @@
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { PrismaClient } from '@prisma/client';
 import { FilterAdvertDto } from 'src/adverts/dto/filter-advert.dto';
 import { AdvertConfig } from 'src/config/advert.config';
 
@@ -78,13 +79,14 @@ export function getPagination(filters: FilterAdvertDto) {
 export async function resolveCoordinates(
   userId: string | null,
   filters: FilterAdvertDto,
+  prisma: PrismaClient,
 ): Promise<{ latitude: number; longitude: number } | null> {
   if (filters.useUserLocation) {
     if (!userId) {
       throw new UnauthorizedException('Login required to use user location');
     }
 
-    const user = await this.prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id: userId },
       select: { latitude: true, longitude: true },
     });
