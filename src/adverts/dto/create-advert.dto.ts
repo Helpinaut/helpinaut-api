@@ -1,4 +1,8 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  ApiHideProperty,
+  ApiProperty,
+  ApiPropertyOptional,
+} from '@nestjs/swagger';
 import { Category } from '@prisma/client';
 import { Transform, Type } from 'class-transformer';
 import {
@@ -56,15 +60,19 @@ export class CreateAdvertDto {
     example: 50,
   })
   @Type(() => Number)
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Advert must have a price' })
   @IsNumber()
-  @Min(AdvertConfig.MIN_PRICE)
-  @Max(AdvertConfig.MAX_PRICE)
+  @Min(AdvertConfig.MIN_PRICE, {
+    message: `Price value can not be less than ${AdvertConfig.MIN_PRICE}`,
+  })
+  @Max(AdvertConfig.MAX_PRICE, {
+    message: `Price value can not be more than ${AdvertConfig.MAX_PRICE}`,
+  })
   price: number;
 
   @ApiProperty({ required: true, enum: Category })
-  @IsNotEmpty()
-  @IsEnum(Category)
+  @IsNotEmpty({ message: 'Advert must have a category' })
+  @IsEnum(Category, { message: 'Advert must have a valid category value' })
   category: Category;
 
   @ApiProperty({
@@ -74,17 +82,11 @@ export class CreateAdvertDto {
     example: true,
   })
   @Type(() => Boolean)
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Advert must have a type' })
   @IsBoolean()
   isOffer: boolean;
 
-  @ApiPropertyOptional({
-    type: 'array',
-    items: { type: 'string', format: 'binary' },
-    description: 'Up to 10 image files',
-  })
+  @ApiHideProperty()
   @IsOptional()
-  @IsArray()
-  @ArrayMaxSize(10)
-  photos?: Express.Multer.File[];
+  photos?: any;
 }

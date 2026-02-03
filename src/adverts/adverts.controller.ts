@@ -26,7 +26,6 @@ import path, { join } from 'path';
 import { AdvertsService } from './adverts.service';
 import { FavoritesService } from './services/favorites.service';
 import { PhotosService } from './services/photos.service';
-import { AddPhotoDto } from './dto/add-photo.dto';
 import { CreateAdvertDto } from './dto/create-advert.dto';
 import { UpdateAdvertDto } from './dto/update-advert.dto';
 import { AdvertEntity } from './entities/advert.entity';
@@ -39,6 +38,7 @@ import { DeleteFileOnErrorInterceptor } from 'src/utils/delete-file-on-error.int
 import { FilterAdvertDto } from './dto/filter-advert.dto';
 import { ImageValidationPipe } from './pipes/image-validation.pipe';
 import { UploadConfig } from 'src/config/upload.config';
+import { Category } from '@prisma/client';
 
 const storage = diskStorage({
   destination: join(process.cwd(), String(UploadConfig.DIR)),
@@ -75,8 +75,13 @@ export class AdvertsController {
         title: { type: 'string' },
         description: { type: 'string' },
         price: { type: 'number' },
-        category: { type: 'string' },
-        photos: { type: 'string', format: 'binary' },
+        category: { type: 'string', enum: Object.values(Category) },
+        isOffer: { type: 'boolean' },
+        photos: {
+          type: 'array',
+          items: { type: 'string', format: 'binary' },
+          maxItems: 10,
+        },
       },
     },
   })
@@ -163,7 +168,6 @@ export class AdvertsController {
   @ApiOkResponse({ type: AdvertEntity })
   async uploadPhoto(
     @UploadedFiles(new ImageValidationPipe()) files: Express.Multer.File[],
-    @Body() addPhotoDto: AddPhotoDto,
     @Param('id') id: string,
     @GetUser('id') userId: string,
   ) {
