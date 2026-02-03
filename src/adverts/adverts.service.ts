@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Category, Prisma, Status } from '@prisma/client';
 import { CreateAdvertDto } from './dto/create-advert.dto';
 import { UpdateAdvertDto } from './dto/update-advert.dto';
@@ -153,7 +153,10 @@ export class AdvertsService {
           ) AS "thumbnailUrl",
           "User"."id" AS "ownerId",
           "User"."username" AS "ownerUsername",
-          ${distanceSql} AS distance,
+          CASE
+            WHEN "Advert"."ownerId" = ${userId} THEN NULL
+            ELSE ${distanceSql}
+          END AS distance,
           CASE
             WHEN "FavUser"."id" IS NULL THEN false
             ELSE true
@@ -244,7 +247,7 @@ export class AdvertsService {
    */
   async getAll(userId: string | null, filters: FilterAdvertDto) {
     const { limit, offset } = getPagination(filters);
-    const coordinates = await resolveCoordinates(userId, filters);
+    const coordinates = await resolveCoordinates(userId, filters, this.prisma);
     const { whereSql, distanceSql, distanceFilterSql } =
       this.buildWhereConditions(filters, coordinates);
 
@@ -263,7 +266,7 @@ export class AdvertsService {
         isOwner: advert.ownerId === userId,
         isFavorite: advert.isFavorite,
         favoriteCount: Number(advert.favoriteCount) ?? 0,
-        distance: advert.distance ?? null,
+        distance: advert.distance,
       }),
     );
   }
