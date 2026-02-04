@@ -11,6 +11,8 @@ import {
 import { PrismaService } from 'src/prisma/prisma.service';
 import { FilterAdvertDto } from './dto/filter-advert.dto';
 import { AdvertsMapper } from './adverts.mapper';
+import path from 'path';
+import { unlink } from 'fs/promises';
 
 @Injectable()
 export class AdvertsService {
@@ -392,6 +394,24 @@ export class AdvertsService {
     });
 
     assertOwnership(advert, userId);
+
+    if (advert.photos) {
+      for (const photo of advert.photos) {
+        const filePath = path.join(
+          process.cwd(),
+          'uploads',
+          photo.url.replace('/uploads/', ''),
+        );
+
+        try {
+          await unlink(filePath);
+        } catch (error) {
+          console.log(`Failed to delete file: ${filePath}`, error);
+        }
+      }
+
+      await this.prisma.photo.deleteMany({ where: { advertId: advert.id } });
+    }
 
     await this.prisma.advert.delete({ where: { id } });
 

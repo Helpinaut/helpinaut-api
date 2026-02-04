@@ -1,7 +1,9 @@
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { unlink } from 'fs/promises';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { assertOwnership } from '../adverts.helper';
-import { BadRequestException, Injectable } from '@nestjs/common';
 import { AdvertsMapper } from '../adverts.mapper';
+import path from 'path';
 
 @Injectable()
 export class PhotosService {
@@ -72,6 +74,18 @@ export class PhotosService {
 
     if (!photo) {
       throw new BadRequestException('This photo does not belong to the advert');
+    }
+
+    const filePath = path.join(
+      process.cwd(),
+      'uploads',
+      photo.url.replace('/uploads/', ''),
+    );
+
+    try {
+      await unlink(filePath);
+    } catch (error) {
+      console.log(`Failed to delete file: ${filePath}`, error);
     }
 
     await this.prisma.photo.delete({ where: { id: photoId } });

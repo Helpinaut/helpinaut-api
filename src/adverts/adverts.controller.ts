@@ -110,6 +110,12 @@ export class AdvertsController {
     return this.advertsService.getAll(userId, filters);
   }
 
+  @Get('categories')
+  @ApiOkResponse({ type: String, isArray: true })
+  async getCategories() {
+    return this.advertsService.getCategories();
+  }
+
   @Get(':id')
   @UseGuards(OptionalJwtAuthGuard)
   @ApiBearerAuth()
@@ -121,7 +127,6 @@ export class AdvertsController {
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiConsumes('multipart/form-data')
   @ApiOkResponse({ type: AdvertEntity })
   async update(
     @Body() updateAdvertDto: UpdateAdvertDto,
@@ -137,12 +142,6 @@ export class AdvertsController {
   @ApiOkResponse({ type: AdvertEntity })
   async delete(@Param('id') id: string, @GetUser('id') userId: string) {
     return this.advertsService.delete(id, userId);
-  }
-
-  @Get('categories')
-  @ApiOkResponse({ type: String, isArray: true })
-  async getCategories() {
-    return this.advertsService.getCategories();
   }
 
   @Post(':id/photos')
