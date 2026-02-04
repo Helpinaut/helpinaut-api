@@ -155,15 +155,13 @@ export class AdvertsController {
     schema: {
       type: 'object',
       properties: {
-        title: { type: 'string' },
-        description: { type: 'string' },
-        price: { type: 'number' },
-        category: { type: 'string' },
-        photos: { type: 'string', format: 'binary' },
+        photos: {
+          type: 'array',
+          items: { type: 'string', format: 'binary' },
+        },
       },
     },
   })
-  @ApiConsumes('multipart/form-data')
   @ApiOkResponse({ type: AdvertEntity })
   async uploadPhoto(
     @UploadedFiles(new ImageValidationPipe()) files: Express.Multer.File[],

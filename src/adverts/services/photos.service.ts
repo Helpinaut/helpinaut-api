@@ -70,7 +70,7 @@ export class PhotosService {
 
     assertOwnership(advert, userId);
 
-    const photo = advert.photos.find((p) => p.id === photo?.id);
+    const photo = advert.photos.find((p) => p.id === photoId);
 
     if (!photo) {
       throw new BadRequestException('This photo does not belong to the advert');
