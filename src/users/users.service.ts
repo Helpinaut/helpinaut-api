@@ -1,14 +1,16 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
+import { unlink } from 'fs/promises';
+import path from 'path';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { AdvertEntity } from 'src/adverts/entities/advert.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { UserEntity } from './entities/user.entity';
 import { UpdateLocationDto } from './dto/update-location.dto';
 import { GeocodingService } from './services/geocoding.service';
-import { OwnerDetailsEntity } from './entities/owner.entity';
 import { FavoriteEntity } from 'src/adverts/entities/favorite.entity';
-import { AdvertEntity } from 'src/adverts/entities/advert.entity';
+import { UserEntity } from './entities/user.entity';
+import { OwnerDetailsEntity } from './entities/owner.entity';
 
 @Injectable()
 export class UsersService {
@@ -111,11 +113,10 @@ export class UsersService {
         adverts: {
           include: {
             photos: true,
+            _count: { select: { favorites: true } },
           },
         },
-        favorites: {
-          include: { advert: true },
-        },
+        favorites: true,
       },
     });
 
@@ -162,6 +163,44 @@ export class UsersService {
    * @returns Deleted UserEntity.
    */
   async delete(id: string) {
+    const user = await this.prisma.user.findFirstOrThrow({
+      where: { id },
+      include: {
+        adverts: {
+          include: {
+            photos: true,
+            favorites: true,
+          },
+        },
+        favorites: true,
+      },
+    });
+
+    await this.prisma.favorite.deleteMany({ where: { userId: id } });
+    await this.prisma.favorite.deleteMany({
+      where: { advertId: { in: user.adverts.map((advert) => advert.id) } },
+    });
+
+    for (const advert of user.adverts) {
+      for (const photo of advert.photos) {
+        const filePath = path.join(
+          process.cwd(),
+          'uploads',
+          photo.url.replace('/uploads/', ''),
+        );
+
+        try {
+          await unlink(filePath);
+        } catch (error) {
+          console.log(`Failed to delete file: ${filePath}`, error);
+        }
+      }
+
+      await this.prisma.photo.deleteMany({ where: { advertId: advert.id } });
+    }
+
+    await this.prisma.advert.deleteMany({ where: { ownerId: id } });
+
     const deletedUser = await this.prisma.user.delete({ where: { id } });
 
     return new UserEntity(deletedUser);

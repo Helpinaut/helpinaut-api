@@ -162,6 +162,7 @@ export class AdvertsController {
       },
     },
   })
+  @ApiConsumes('multipart/form-data')
   @ApiOkResponse({ type: AdvertEntity })
   async uploadPhoto(
     @UploadedFiles(new ImageValidationPipe()) files: Express.Multer.File[],

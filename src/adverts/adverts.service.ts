@@ -413,6 +413,8 @@ export class AdvertsService {
       await this.prisma.photo.deleteMany({ where: { advertId: advert.id } });
     }
 
+    await this.prisma.favorite.deleteMany({ where: { advertId: advert.id } });
+
     await this.prisma.advert.delete({ where: { id } });
 
     return this.mapper.toAdvertDetailsEntity(advert, {
