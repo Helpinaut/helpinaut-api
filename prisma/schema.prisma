@@ -8,17 +8,17 @@ datasource db {
 }
 
 model User {
-  id        String     @id @default(uuid())
-  email     String     @unique
-  username  String     @unique
-  password  String
-  adverts   Advert[]
-  favorites Favorite[]
-  postcode  String?
-  latitude  Float?
-  longitude Float?
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  id         String     @id @default(uuid())
+  email      String     @unique
+  username   String     @unique
+  password   String
+  adverts    Advert[]
+  favorites  Favorite[]
+  postalCode String
+  latitude   Float
+  longitude  Float
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
 }
 
 model Advert {
@@ -27,15 +27,15 @@ model Advert {
   description String
   price       Float
   category    Category
-  offer       Boolean
-  photos      Photo[]
-  favorites   Favorite[]
+  isOffer     Boolean
   status      Status     @default(ACTIVE)
   owner       User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   ownerId     String
-  viewCount   Int        @default(0)
-  latitude    Float?
-  longitude   Float?
+  photos      Photo[]
+  favorites   Favorite[]
+  views       Int        @default(0)
+  latitude    Float
+  longitude   Float
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 }
@@ -60,22 +60,22 @@ model Favorite {
 }
 
 enum Category {
-  BEAUTY_SERVICES
-  CARING
+  BEAUTY
+  CARE
   CARPENTRY
+  CLASSES
   CLEANING
   ELECTRICIAN
   GARDENING
+  MEDIA
   PAINTING
-  PERSONAL_TRAINING
   PETS
   PLUMBING
-  PRIVATE_CLASSES
   REPAIRS
   RESTORATION
   TECHNOLOGY
+  TRAINING
   TRANSPORT
-  VIDEO_AND_PHOTOGRAPHY
 }
 
 enum Status {

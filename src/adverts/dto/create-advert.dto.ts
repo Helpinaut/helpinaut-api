@@ -1,7 +1,13 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  ApiHideProperty,
+  ApiProperty,
+  ApiPropertyOptional,
+} from '@nestjs/swagger';
 import { Category } from '@prisma/client';
 import { Transform, Type } from 'class-transformer';
 import {
+  ArrayMaxSize,
+  IsArray,
   IsBoolean,
   IsEnum,
   IsNotEmpty,
@@ -11,64 +17,76 @@ import {
   Max,
   MaxLength,
   Min,
+  MinLength,
 } from 'class-validator';
+import { AdvertConfig } from 'src/config/advert.config';
 
+/**
+ * DTO for creating a new advert.
+ * Includes validation rules and Swagger documentation.
+ */
 export class CreateAdvertDto {
   @ApiProperty({
     required: true,
-    maxLength: 50,
-    description: 'max length 50 characters',
+    maxLength: AdvertConfig.MAX_TITLE,
+    description: `Title of the advert (max length ${AdvertConfig.MAX_TITLE} characters)`,
+    example: 'Electrician available for home repairs',
   })
+  @Transform(({ value }) => value?.trim())
   @IsNotEmpty()
   @IsString()
-  @MaxLength(50)
+  @MinLength(5)
+  @MaxLength(AdvertConfig.MAX_TITLE)
   title: string;
 
   @ApiProperty({
     required: true,
-    maxLength: 500,
-    description: 'max length 500 characters',
+    maxLength: AdvertConfig.MAX_DESCRIPTION,
+    description: `Detailed description (max length ${AdvertConfig.MAX_DESCRIPTION} characters)`,
+    example: 'Certified electrician with 10 years of experience.',
   })
+  @Transform(({ value }) => value.trim())
   @IsNotEmpty()
   @IsString()
-  @MaxLength(500)
+  @MinLength(20)
+  @MaxLength(AdvertConfig.MAX_DESCRIPTION)
   description: string;
 
   @ApiProperty({
     required: true,
-    minimum: 1,
-    maximum: 9999.99,
-    description: 'from 1.00 to 9999.99',
+    minimum: AdvertConfig.MIN_PRICE,
+    maximum: AdvertConfig.MAX_PRICE,
+    description: `Price of the advert (from ${AdvertConfig.MIN_PAGE} to ${AdvertConfig.MAX_PRICE})`,
+    example: 50,
   })
   @Type(() => Number)
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Advert must have a price' })
   @IsNumber()
-  @Min(1)
-  @Max(9999.99)
+  @Min(AdvertConfig.MIN_PRICE, {
+    message: `Price value can not be less than ${AdvertConfig.MIN_PRICE}`,
+  })
+  @Max(AdvertConfig.MAX_PRICE, {
+    message: `Price value can not be more than ${AdvertConfig.MAX_PRICE}`,
+  })
   price: number;
 
   @ApiProperty({ required: true, enum: Category })
-  @Transform(({ value }) =>
-    typeof value === 'string'
-      ? value.toUpperCase().replace(/\s+/g, '_')
-      : value,
-  )
-  @IsNotEmpty()
-  @IsString()
-  @IsEnum(Category)
-  category: string;
+  @IsNotEmpty({ message: 'Advert must have a category' })
+  @IsEnum(Category, { message: 'Advert must have a valid category value' })
+  category: Category;
 
-  @ApiProperty({ required: true })
-  @Type(() => Boolean)
-  @IsNotEmpty()
-  @IsBoolean()
-  offer: boolean;
-
-  @ApiPropertyOptional({
-    type: 'array',
-    items: { type: 'string', format: 'binary' },
-    description: 'up to 10 image files',
+  @ApiProperty({
+    required: true,
+    description:
+      'Indicates if the advert is an offer (true) or a request (false)',
+    example: true,
   })
+  @Type(() => Boolean)
+  @IsNotEmpty({ message: 'Advert must have a type' })
+  @IsBoolean()
+  isOffer: boolean;
+
+  @ApiHideProperty()
   @IsOptional()
-  photos?: any[];
+  photos?: any;
 }

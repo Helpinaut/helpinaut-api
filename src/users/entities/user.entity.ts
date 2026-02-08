@@ -1,48 +1,65 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Advert, Favorite, User } from '@prisma/client';
-import { Exclude } from 'class-transformer';
+import { Exclude, Expose, plainToInstance } from 'class-transformer';
+import { AdvertEntity } from 'src/adverts/entities/advert.entity';
+import { FavoriteEntity } from 'src/adverts/entities/favorite.entity';
 
-type UserWithoutPassword = Omit<User, 'password'>;
-
-export class UserEntity implements UserWithoutPassword {
+export class UserEntity {
   constructor(partial: Partial<UserEntity>) {
-    Object.assign(this, partial);
+    Object.assign(this, plainToInstance(UserEntity, partial));
   }
 
-  @ApiProperty()
+  // Identifiers and basics
+  @ApiProperty({ description: 'Unique identifier of the user' })
+  @Expose()
   id: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: 'Email of the user',
+    example: 'user@example.com',
+  })
+  @Expose()
   email: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Username of the user', example: 'john' })
+  @Expose()
   username: string;
 
-  @ApiProperty()
-  adverts: Advert[];
+  @ApiProperty({
+    description: 'Postal code of the user',
+    example: '41001',
+  })
+  @Expose()
+  postalCode: string;
 
-  @ApiProperty()
-  favorites: Favorite[];
+  // Relations
+  @ApiProperty({
+    description: 'List of adverts created by the user',
+    type: [AdvertEntity],
+  })
+  @Expose()
+  adverts: AdvertEntity[];
 
-  @ApiProperty()
-  postcode: string | null;
+  @ApiProperty({
+    description: 'List of favorite adverts marked by the user',
+    type: [FavoriteEntity],
+  })
+  favorites: FavoriteEntity[];
 
-  @ApiProperty()
-  latitude: number | null;
+  // Location
+  @ApiProperty({ description: 'Latitude of the user', required: false })
+  latitude: number;
 
-  @ApiProperty()
-  longitude: number | null;
+  @ApiProperty({ description: 'Longitude of the user', required: false })
+  longitude: number;
 
-  @ApiProperty()
+  // Metadata
+  @ApiProperty({ description: 'Date when the user account was created' })
   createdAt: Date;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Date when the user account was last updated' })
   updatedAt: Date;
 
-  /**
-   * Private properties
-   */
-
+  // Private properties (excluded from API responses)
   @Exclude()
   password: string;
 }

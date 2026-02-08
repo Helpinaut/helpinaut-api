@@ -1,73 +1,142 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Category } from '@prisma/client';
-import { Transform } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
-  IsBooleanString,
-  IsNumberString,
+  IsBoolean,
+  IsEnum,
+  IsNumber,
   IsOptional,
   IsString,
   Max,
   MaxLength,
   Min,
 } from 'class-validator';
+import { AdvertConfig } from 'src/config/advert.config';
 
+/**
+ * DTO for filtering adverts.
+ * Used in query parameters for search and pagination.
+ */
 export class FilterAdvertDto {
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    description: `Number of results per page (max ${AdvertConfig.MAX_LIMIT})`,
+    example: 16,
+  })
   @IsOptional()
-  @IsNumberString()
-  limit?: string;
+  @Transform(({ value }) => Number(value))
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  @Max(AdvertConfig.MAX_LIMIT)
+  limit?: number;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    description: 'Page number (starting from 1)',
+    example: 1,
+  })
   @IsOptional()
-  @IsNumberString()
-  page?: string;
+  @Transform(({ value }) => Number(value))
+  @Type(() => Number)
+  @IsNumber()
+  @Min(AdvertConfig.MIN_PRICE)
+  page?: number;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    description: 'Filter by title (case-insensitive, max length 50)',
+    example: 'Classes',
+  })
   @IsOptional()
-  @Transform(({ value }) => value.trim())
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.trim().toLowerCase() : value,
+  )
   @IsString()
-  @MaxLength(50)
+  @MaxLength(AdvertConfig.MAX_TITLE)
   title?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Minimum price', example: 10 })
   @IsOptional()
-  @IsNumberString()
-  minPrice?: string;
+  @Transform(({ value }) => Number(value))
+  @Type(() => Number)
+  @IsNumber()
+  @Min(AdvertConfig.MIN_PRICE)
+  minPrice?: number;
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsNumberString()
-  maxPrice?: string;
+  @Transform(({ value }) => Number(value))
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  @Max(AdvertConfig.MAX_PRICE)
+  maxPrice?: number;
 
-  @ApiPropertyOptional({ enum: Category })
+  @ApiPropertyOptional({ enum: Category, description: 'Filter by category' })
   @IsOptional()
+  @IsEnum(Category)
   category?: Category;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    description: 'Filter by type of advert (true = offer, false = request)',
+    example: true,
+  })
   @IsOptional()
-  @IsBooleanString()
-  offer?: string;
+  @Transform(({ value }) => {
+    if (value === 'true' || value === true) return true;
+    if (value === 'false' || value === false) return false;
+    return undefined;
+  })
+  @Type(() => Boolean)
+  @IsBoolean()
+  isOffer?: boolean;
 
-  @ApiPropertyOptional({ description: 'use user location' })
+  @ApiPropertyOptional({
+    description: 'Use logged user location instead of manual coordinates',
+    example: true,
+  })
   @IsOptional()
-  @IsBooleanString()
-  useUserLocation?: string;
+  @Type(() => Boolean)
+  @IsBoolean()
+  useUserLocation?: boolean;
 
-  @ApiPropertyOptional({ description: 'latitude if not using user location' })
+  @ApiPropertyOptional({
+    description: 'Latitude if not using user location',
+    example: 37.3891,
+  })
   @IsOptional()
-  latitude?: string;
+  @Transform(({ value }) => Number(value))
+  @Type(() => Number)
+  @IsNumber()
+  @Min(-90)
+  @Max(90)
+  latitude?: number;
 
-  @ApiPropertyOptional({ description: 'longitude if not using user location' })
+  @ApiPropertyOptional({
+    description: 'Longitude if not using user location',
+    example: -5.9845,
+  })
   @IsOptional()
-  longitude?: string;
+  @Transform(({ value }) => Number(value))
+  @Type(() => Number)
+  @IsNumber()
+  @Min(-180)
+  @Max(180)
+  longitude?: number;
 
-  @ApiPropertyOptional({ description: 'maximum distance in KM' })
+  @ApiPropertyOptional({ description: 'Maximum distance in KM', example: 30 })
   @IsOptional()
-  @IsNumberString()
-  maxDistance?: string;
+  @Transform(({ value }) => Number(value))
+  @Type(() => Number)
+  @Min(1)
+  @IsNumber()
+  maxDistance?: number;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    description: 'Filter by most viewed adverts',
+    example: true,
+  })
   @IsOptional()
-  @IsBooleanString()
-  popular?: string;
+  @Transform(({ value }) => value === 'true')
+  @Type(() => Boolean)
+  @IsBoolean()
+  popular?: boolean;
 }
