@@ -39,7 +39,7 @@ export class CreateUserDto {
   })
   @IsNotEmpty()
   @IsString()
-  @MinLength(8, {})
+  @MinLength(8, { message: 'Password must be longer than 8 characters' })
   password: string;
 
   @ApiProperty({

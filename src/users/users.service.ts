@@ -88,6 +88,7 @@ export class UsersService {
         adverts: {
           include: {
             photos: true,
+            _count: { select: { favorites: true } },
           },
         },
       },
@@ -95,7 +96,13 @@ export class UsersService {
 
     return new OwnerDetailsEntity({
       ...user,
-      adverts: user.adverts.map((advert) => new AdvertEntity(advert)),
+      adverts: user.adverts.map(
+        (advert) =>
+          new AdvertEntity({
+            ...advert,
+            favoriteCount: advert._count.favorites ?? 0,
+          }),
+      ),
       advertsCount: user.adverts.length,
     });
   }
@@ -122,7 +129,13 @@ export class UsersService {
 
     return new UserEntity({
       ...user,
-      adverts: user.adverts.map((advert) => new AdvertEntity(advert)),
+      adverts: user.adverts.map(
+        (advert) =>
+          new AdvertEntity({
+            ...advert,
+            favoriteCount: advert._count.favorites ?? 0,
+          }),
+      ),
       favorites: user.favorites.map((favorite) => new FavoriteEntity(favorite)),
     });
   }

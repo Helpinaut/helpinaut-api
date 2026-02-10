@@ -55,7 +55,7 @@ export class OwnerDetailsEntity {
     required: false,
   })
   @Expose()
-  adverts?: AdvertEntity[];
+  adverts: AdvertEntity[];
 
   // Metadata
   @ApiProperty({ description: 'Date when the user account was created' })
