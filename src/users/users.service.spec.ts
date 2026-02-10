@@ -260,4 +260,95 @@ describe('UsersService', () => {
       await expect(service.getMe('missing')).rejects.toThrow('Not found');
     });
   });
+
+  describe('update()', () => {
+    it('should update user and hash password if provided', async () => {
+      const assertUniqueCredentials = jest
+        .spyOn<any, any>(service, 'assertUniqueCredentials')
+        .mockResolvedValue(undefined);
+
+      prisma.user.update.mockResolvedValue({
+        id: '123',
+        email: 'test@email.com',
+        username: 'test',
+        password: 'hashed-password',
+        postalCode: '41001',
+        latitude: 37.38,
+        longitude: -5.99,
+      });
+
+      const dto = {
+        email: 'new@email.com',
+        password: 'new-password',
+      };
+
+      const result = await service.update('123', dto);
+
+      expect(assertUniqueCredentials).toHaveBeenCalledWith(
+        'new@email.com',
+        undefined,
+        '123',
+      );
+      expect(require('bcrypt').hash).toHaveBeenCalled();
+      expect(prisma.user.update).toHaveBeenCalledWith({
+        where: { id: '123' },
+        data: {
+          email: 'new@email.com',
+          password: 'hashed-password',
+        },
+      });
+      expect(result).toBeInstanceOf(UserEntity);
+    });
+
+    it('should update user without calling assertUniqueCredentials or hashing password', async () => {
+      const assertUniqueCredentials = jest
+        .spyOn<any, any>(service, 'assertUniqueCredentials')
+        .mockResolvedValue(undefined);
+
+      prisma.user.update.mockResolvedValue({
+        id: '123',
+        email: 'test@email.com',
+        username: 'test',
+        password: 'unchanged',
+      });
+
+      const dto = {};
+
+      const result = await service.update('123', dto);
+
+      expect(assertUniqueCredentials).not.toHaveBeenCalled();
+      expect(require('bcrypt').hash).not.toHaveBeenCalled();
+      expect(prisma.user.update).toHaveBeenCalledWith({
+        where: { id: '123' },
+        data: {},
+      });
+      expect(result).toBeInstanceOf(UserEntity);
+    });
+
+    it('should throw BadRequestException if email is already in use', async () => {
+      jest
+        .spyOn<any, any>(service, 'assertUniqueCredentials')
+        .mockRejectedValue(new BadRequestException('Email is already in use'));
+
+      const dto = { email: 'duplicated@email.com' };
+
+      await expect(service.update('123', dto)).rejects.toThrow(
+        'Email is already in use',
+      );
+    });
+
+    it('should throw BadRequestException if username is already in use', async () => {
+      jest
+        .spyOn<any, any>(service, 'assertUniqueCredentials')
+        .mockRejectedValue(
+          new BadRequestException('Username is already in use'),
+        );
+
+      const dto = { username: 'taken' };
+
+      await expect(service.update('123', dto)).rejects.toThrow(
+        'Username is already in use',
+      );
+    });
+  });
 });
