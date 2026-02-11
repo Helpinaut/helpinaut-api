@@ -34,9 +34,11 @@ jest.mock('bcrypt', () => ({
   hash: jest.fn().mockResolvedValue('hashed-password'),
 }));
 
+jest.mock('fs/promises', () => ({ unlink: jest.fn() }));
+
 describe('UsersService', () => {
   let service: UsersService;
-  let geocoding: GeocodingService;
+  let geocoding: jest.Mocked<GeocodingService>;
   let prisma: typeof prismaMock;
 
   beforeEach(async () => {
@@ -56,7 +58,7 @@ describe('UsersService', () => {
     }).compile();
 
     service = module.get(UsersService);
-    geocoding = module.get(GeocodingService);
+    geocoding = module.get(GeocodingService) as jest.Mocked<GeocodingService>;
     prisma = module.get(PrismaService);
 
     jest.clearAllMocks();
@@ -349,6 +351,128 @@ describe('UsersService', () => {
       await expect(service.update('123', dto)).rejects.toThrow(
         'Username is already in use',
       );
+    });
+  });
+
+  describe('delete()', () => {
+    it('should delete user, adverts, photos and favorites correctly', async () => {
+      const unlink = require('fs/promises').unlink;
+
+      prisma.user.findFirstOrThrow.mockResolvedValue({
+        id: '123',
+        favorites: [{ id: 'f1' }],
+        adverts: [
+          {
+            id: 'a1',
+            photos: [
+              { id: 'p1', url: '/uploads/photo1.jpg' },
+              { id: 'p2', url: '/uploads/photo2.jpg' },
+            ],
+            favorites: [{ id: 'fa1' }],
+          },
+        ],
+      });
+
+      prisma.user.delete.mockResolvedValue({
+        id: '123',
+        email: 'test@email.com',
+        username: 'test',
+      });
+
+      const result = await service.delete('123');
+
+      expect(prisma.user.findFirstOrThrow).toHaveBeenCalled();
+      expect(prisma.favorite.deleteMany).toHaveBeenCalledWith({
+        where: { userId: '123' },
+      });
+      expect(prisma.favorite.deleteMany).toHaveBeenCalledWith({
+        where: { advertId: { in: ['a1'] } },
+      });
+      expect(unlink).toHaveBeenCalledTimes(2);
+      expect(prisma.photo.deleteMany).toHaveBeenCalledWith({
+        where: { advertId: 'a1' },
+      });
+      expect(prisma.advert.deleteMany).toHaveBeenCalledWith({
+        where: { ownerId: '123' },
+      });
+      expect(prisma.user.delete).toHaveBeenCalledWith({
+        where: { id: '123' },
+      });
+      expect(result).toBeInstanceOf(UserEntity);
+    });
+
+    it('should delete user even if they have no adverts', async () => {
+      const unlink = require('fs/promises').unlink;
+
+      prisma.user.findFirstOrThrow.mockResolvedValue({
+        id: '123',
+        favorites: [],
+        adverts: [],
+      });
+
+      prisma.user.delete.mockResolvedValue({
+        id: '123',
+        email: 'test@email.com',
+        username: 'test',
+      });
+
+      const result = await service.delete('123');
+
+      expect(unlink).not.toHaveBeenCalled();
+      expect(prisma.photo.deleteMany).not.toHaveBeenCalled();
+      expect(prisma.advert.deleteMany).toHaveBeenCalledWith({
+        where: { ownerId: '123' },
+      });
+      expect(result).toBeInstanceOf(UserEntity);
+    });
+
+    it('should throw if user does not exist', async () => {
+      prisma.user.findFirstOrThrow.mockImplementation(() => {
+        throw new Error('Not found');
+      });
+
+      await expect(service.delete('missing')).rejects.toThrow('Not found');
+    });
+  });
+
+  describe('updateLocation()', () => {
+    it('should update user and adverts with new coordinates', async () => {
+      prisma.user.update.mockResolvedValue({});
+      prisma.advert.updateMany.mockResolvedValue({});
+
+      const dto = { postalCode: '41001' };
+
+      const result = await service.updateLocation('123', dto);
+
+      expect(geocoding.fromPostalCode).toHaveBeenCalledWith('41001');
+      expect(prisma.user.update).toHaveBeenCalledWith({
+        where: { id: '123' },
+        data: {
+          postalCode: '41001',
+          latitude: 37.38,
+          longitude: -5.99,
+        },
+      });
+      expect(prisma.advert.updateMany).toHaveBeenCalledWith({
+        where: { ownerId: '123' },
+        data: {
+          latitude: 37.38,
+          longitude: -5.99,
+        },
+      });
+      expect(result).toEqual({ message: 'Location successfully updated' });
+    });
+
+    it('should throw if geocoding service fails', async () => {
+      geocoding.fromPostalCode.mockRejectedValue(new Error('Geocoding failed'));
+
+      const dto = { postalCode: '41001' };
+
+      await expect(service.updateLocation('123', dto)).rejects.toThrow(
+        'Geocoding failed',
+      );
+      expect(prisma.user.update).not.toHaveBeenCalled();
+      expect(prisma.advert.updateMany).not.toHaveBeenCalled();
     });
   });
 });
