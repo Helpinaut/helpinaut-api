@@ -426,6 +426,37 @@ describe('UsersService', () => {
       expect(result).toBeInstanceOf(UserEntity);
     });
 
+    it('should handle unlink errors', async () => {
+      const unlink = require('fs/promises').unlink;
+      const log = jest.spyOn(console, 'log').mockImplementation(() => {});
+
+      unlink.mockRejectedValue(new Error('File not found'));
+
+      prisma.user.findFirstOrThrow.mockResolvedValue({
+        id: '123',
+        favorites: [],
+        adverts: [
+          {
+            id: 'a1',
+            photos: [{ id: 'p1', url: '/uploads/photo1.jpg' }],
+            favorites: [],
+          },
+        ],
+      });
+
+      prisma.user.delete.mockResolvedValue({
+        id: '123',
+        email: 'test@email.com',
+        username: 'test',
+      });
+
+      const result = await service.delete('123');
+
+      expect(unlink).toHaveBeenCalled();
+      expect(log).toHaveBeenCalled();
+      expect(result).toBeInstanceOf(UserEntity);
+    });
+
     it('should throw if user does not exist', async () => {
       prisma.user.findFirstOrThrow.mockImplementation(() => {
         throw new Error('Not found');
