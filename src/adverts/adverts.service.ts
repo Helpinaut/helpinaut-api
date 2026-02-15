@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { Category, Prisma, Status } from '@prisma/client';
 import { CreateAdvertDto } from './dto/create-advert.dto';
 import { UpdateAdvertDto } from './dto/update-advert.dto';
@@ -206,6 +206,10 @@ export class AdvertsService {
       where: { id: ownerId },
       select: { latitude: true, longitude: true },
     });
+
+    if (user.latitude == null || user.longitude == null) {
+      throw new BadRequestException('User has no location set');
+    }
 
     const createdAdvert = await this.prisma.advert.create({
       data: {
