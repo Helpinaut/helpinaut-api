@@ -1,3 +1,5 @@
+jest.mock('./adverts.helper');
+
 import { Test, TestingModule } from '@nestjs/testing';
 import { AdvertsService } from './adverts.service';
 import * as helper from './adverts.helper';
@@ -31,13 +33,6 @@ const mapperMock = {
 };
 
 jest.mock('fs/promises', () => ({ unlink: jest.fn() }));
-
-jest.spyOn(helper, 'assertOwnership').mockImplementation(() => {});
-jest
-  .spyOn(helper, 'getPagination')
-  .mockImplementation(() => ({ limit: 10, offset: 0 }));
-jest.spyOn(helper, 'parseEnumValue').mockImplementation((value) => value);
-jest.spyOn(helper, 'resolveCoordinates').mockImplementation(async () => null);
 
 describe('AdvertsService', () => {
   let service: AdvertsService;
@@ -148,6 +143,178 @@ describe('AdvertsService', () => {
       await expect(service.create(dto, ownerId, [])).rejects.toThrow(
         'Database error',
       );
+    });
+  });
+
+  describe('getAll()', () => {
+    it('should retrieve adverts, map them and return summary entities', async () => {
+      const filters = {};
+      const userId = '123';
+
+      (helper.getPagination as jest.Mock).mockReturnValue({
+        limit: 10,
+        offset: 0,
+      });
+      (helper.resolveCoordinates as jest.Mock).mockResolvedValue(null);
+
+      prisma.$queryRaw.mockResolvedValue([
+        {
+          id: 'a1',
+          ownerId: '123',
+          ownerUsername: 'test',
+          thumbnailUrl: '/uploads/photo1.jpg',
+          isFavorite: false,
+          favoriteCount: 3,
+          distance: null,
+        },
+        {
+          id: 'a2',
+          ownerId: '345',
+          ownerUsername: 'other',
+          thumbnailUrl: '/uploads/photo2.jpg',
+          isFavorite: true,
+          favoriteCount: 5,
+          distance: 12.5,
+        },
+      ]);
+
+      mapper.toAdvertSummaryEntity
+        .mockReturnValueOnce('mapped advert 1')
+        .mockReturnValueOnce('mapped advert 2');
+
+      const result = await service.getAll(userId, filters);
+
+      expect(helper.getPagination).toHaveBeenCalledWith(filters);
+      expect(helper.resolveCoordinates).toHaveBeenCalledWith(
+        userId,
+        filters,
+        prisma,
+      );
+      expect(prisma.$queryRaw).toHaveBeenCalled();
+      expect(mapper.toAdvertSummaryEntity).toHaveBeenCalledTimes(2);
+      expect(mapper.toAdvertSummaryEntity).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'a1' }),
+        expect.objectContaining({
+          isOwner: true,
+          isFavorite: false,
+          favoriteCount: 3,
+          distance: null,
+        }),
+      );
+      expect(mapper.toAdvertSummaryEntity).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'a2' }),
+        expect.objectContaining({
+          isOwner: false,
+          isFavorite: true,
+          favoriteCount: 5,
+          distance: 12.5,
+        }),
+      );
+      expect(result).toEqual(['mapped advert 1', 'mapped advert 2']);
+    });
+
+    it('should pass popular=true to getAdvertsRaw when filters.popular is true', async () => {
+      const filters = { popular: true };
+      const userId = '123';
+
+      (helper.getPagination as jest.Mock).mockReturnValue({
+        limit: 10,
+        offset: 0,
+      });
+      (helper.resolveCoordinates as jest.Mock).mockResolvedValue(null);
+
+      prisma.$queryRaw.mockResolvedValue([]);
+
+      await service.getAll(userId, filters);
+
+      expect(prisma.$queryRaw).toHaveBeenCalled();
+      const callArgs = prisma.$queryRaw.mock.calls[0][0].values;
+      expect(filters.popular).toBe(true);
+    });
+
+    it('should apply distance filter when maxDistance is provided', async () => {
+      const filters = { maxDistance: 30 };
+      const userId = '123';
+
+      (helper.getPagination as jest.Mock).mockReturnValue({
+        limit: 10,
+        offset: 0,
+      });
+      (helper.resolveCoordinates as jest.Mock).mockResolvedValue({
+        latitude: 37.38,
+        longitude: -5.99,
+      });
+
+      prisma.$queryRaw.mockResolvedValue([]);
+
+      await service.getAll(userId, filters);
+
+      expect(helper.resolveCoordinates).toHaveBeenCalledWith(
+        userId,
+        filters,
+        prisma,
+      );
+      expect(prisma.$queryRaw).toHaveBeenCalled();
+      const sql = prisma.$queryRaw.mock.calls[0][0].sql;
+      expect(sql).toContain('<=');
+    });
+
+    it('should handle unauthenticated users (userId = null)', async () => {
+      const filters = {};
+
+      (helper.getPagination as jest.Mock).mockReturnValue({
+        limit: 10,
+        offset: 0,
+      });
+      (helper.resolveCoordinates as jest.Mock).mockResolvedValue(null);
+
+      prisma.$queryRaw.mockResolvedValue([
+        {
+          id: 'a1',
+          ownerId: '123',
+          isFavorite: false,
+          favoriteCount: 2,
+          distance: null,
+        },
+      ]);
+
+      mapper.toAdvertSummaryEntity.mockReturnValue('mapped advert');
+
+      const result = await service.getAll(null, filters);
+
+      expect(helper.resolveCoordinates).toHaveBeenCalledWith(
+        null,
+        filters,
+        prisma,
+      );
+      expect(mapper.toAdvertSummaryEntity).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'a1' }),
+        expect.objectContaining({
+          isOwner: false,
+          isFavorite: false,
+          favoriteCount: 2,
+          distance: null,
+        }),
+      );
+      expect(result).toEqual(['mapped advert']);
+    });
+
+    it('should return an empty array when no adverts are found', async () => {
+      const filters = {};
+      const userId = '123';
+
+      (helper.getPagination as jest.Mock).mockReturnValue({
+        limit: 10,
+        offset: 0,
+      });
+      (helper.resolveCoordinates as jest.Mock).mockResolvedValue(null);
+
+      prisma.$queryRaw.mockResolvedValue([]);
+
+      const result = await service.getAll(userId, filters);
+
+      expect(mapper.toAdvertSummaryEntity).not.toHaveBeenCalled();
+      expect(result).toEqual([]);
     });
   });
 });
