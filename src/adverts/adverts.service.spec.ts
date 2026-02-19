@@ -214,6 +214,35 @@ describe('AdvertsService', () => {
       expect(result).toEqual(['mapped advert 1', 'mapped advert 2']);
     });
 
+    it('should pass all filter conditions when provided', async () => {
+      const filters = {
+        title: 'test',
+        minPrice: 10,
+        maxPrice: 100,
+        category: Category.MEDIA,
+        isOffer: true,
+      };
+      const userId = '123';
+
+      (helper.getPagination as jest.Mock).mockReturnValue({
+        limit: 10,
+        offset: 0,
+      });
+      (helper.resolveCoordinates as jest.Mock).mockResolvedValue(null);
+
+      prisma.$queryRaw.mockResolvedValue([]);
+
+      await service.getAll(userId, filters);
+
+      expect(prisma.$queryRaw).toHaveBeenCalled();
+      const sql = prisma.$queryRaw.mock.calls[0][0].sql;
+      expect(sql).toContain('LOWER("Advert"."title") LIKE');
+      expect(sql).toContain('"Advert"."price" >=');
+      expect(sql).toContain('"Advert"."price" <=');
+      expect(sql).toContain('"Advert"."category" =');
+      expect(sql).toContain('"Advert"."isOffer" =');
+    });
+
     it('should pass popular=true to getAdvertsRaw when filters.popular is true', async () => {
       const filters = { popular: true };
       const userId = '123';
