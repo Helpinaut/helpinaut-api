@@ -5,7 +5,7 @@ import { AdvertsService } from './adverts.service';
 import * as helper from './adverts.helper';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AdvertsMapper } from './adverts.mapper';
-import { Category } from '@prisma/client';
+import { Category, Status } from '@prisma/client';
 
 const prismaMock = {
   user: {
@@ -473,6 +473,127 @@ describe('AdvertsService', () => {
       prisma.advert.findUniqueOrThrow.mockRejectedValue(new Error('Not found'));
 
       await expect(service.getById('a1', '123')).rejects.toThrow('Not found');
+    });
+  });
+
+  describe('update()', () => {
+    it('should update advert and return mapped details', async () => {
+      const advert = { id: 'a1', ownerId: '123' };
+
+      prisma.advert.findUniqueOrThrow.mockResolvedValue(advert);
+      prisma.advert.update.mockResolvedValue({
+        id: 'a1',
+        title: 'title',
+        owner: {},
+        photos: [],
+        _count: { favorites: 0 },
+      });
+
+      mapper.toAdvertDetailsEntity.mockReturnValue('mapped advert');
+
+      const dto = { title: 'updated' };
+      const result = await service.update('a1', '123', dto);
+
+      expect(helper.assertOwnership).toHaveBeenCalledWith(advert, '123');
+      expect(prisma.advert.update).toHaveBeenCalledWith({
+        where: { id: 'a1' },
+        data: { title: 'updated' },
+        include: expect.any(Object),
+      });
+      expect(mapper.toAdvertDetailsEntity).toHaveBeenCalledWith(
+        expect.any(Object),
+        { isOwner: true, isFavorite: false },
+      );
+      expect(result).toBe('mapped advert');
+    });
+
+    it('should parse category when provided', async () => {
+      const advert = { id: 'a1', ownerId: '123' };
+
+      prisma.advert.findUniqueOrThrow.mockResolvedValue(advert);
+      prisma.advert.update.mockResolvedValue({
+        id: 'a1',
+        owner: {},
+        photos: [],
+        _count: { favorites: 0 },
+      });
+
+      mapper.toAdvertDetailsEntity.mockReturnValue('mapped advert');
+
+      const dto = { category: Category.MEDIA };
+      const parse = helper.parseEnumValue as jest.Mock;
+
+      await service.update('a1', '123', dto);
+
+      expect(parse).toHaveBeenCalledWith('MEDIA', Category);
+    });
+
+    it('should parse status when provided', async () => {
+      const advert = { id: 'a1', ownerId: '123' };
+
+      prisma.advert.findUniqueOrThrow.mockResolvedValue(advert);
+      prisma.advert.update({
+        id: 'a1',
+        owner: {},
+        photos: [],
+        _count: { favorites: 0 },
+      });
+
+      mapper.toAdvertDetailsEntity.mockReturnValue('mapped advert');
+
+      const dto = { status: Status.RESERVED };
+      const parse = helper.parseEnumValue as jest.Mock;
+
+      await service.update('a1', '123', dto);
+
+      expect(parse).toHaveBeenCalledWith('RESERVED', Status);
+    });
+
+    it('should ignore photos field in UpdateAdvertDto', async () => {
+      const advert = { id: 'a1', ownerId: '123' };
+
+      prisma.advert.findUniqueOrThrow.mockResolvedValue(advert);
+      prisma.advert.update.mockResolvedValue({
+        id: 'a1',
+        owner: {},
+        photos: [],
+        _count: { favorites: 0 },
+      });
+
+      mapper.toAdvertDetailsEntity.mockReturnValue('mapped advert');
+
+      const dto = { title: 'updated', photos: ['ignored', 'ignored'] };
+
+      await service.update('a1', '123', dto);
+
+      expect(prisma.advert.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: { title: 'updated' } }),
+      );
+    });
+
+    it('should throw if user is not the owner', async () => {
+      const advert = { id: 'a1', ownerId: '123' };
+
+      prisma.advert.findUniqueOrThrow.mockResolvedValue(advert);
+      (helper.assertOwnership as jest.Mock).mockImplementation(() => {
+        throw new Error('Not owner');
+      });
+
+      await expect(
+        service.update('a1', '345', { title: 'updated' }),
+      ).rejects.toThrow('Not owner');
+      expect(prisma.advert.update).not.toHaveBeenCalled();
+    });
+
+    it('should throw if advert update fails', async () => {
+      const advert = { id: 'a1', ownerId: '123' };
+
+      prisma.advert.findUniqueOrThrow.mockResolvedValue(advert);
+      prisma.advert.update.mockRejectedValue(new Error('Database error'));
+
+      await expect(
+        service.update('a1', '123', { title: 'updated' }),
+      ).rejects.toThrow('Database error');
     });
   });
 });
