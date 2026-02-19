@@ -680,4 +680,24 @@ describe('AdvertsService', () => {
       expect(prisma.advert.delete).not.toHaveBeenCalled();
     });
   });
+
+  describe('getCategories()', () => {
+    it('should return all categories formatted with value and label', () => {
+      const result = service.getCategories();
+      const enumValues = Object.values(Category).sort();
+
+      expect(result).toHaveLength(enumValues.length);
+      expect(result.map((category) => category.value)).toEqual(enumValues);
+
+      for (const item of result) {
+        const expected = item.value
+          .toLowerCase()
+          .split('_')
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+
+        expect(item.label).toBe(expected);
+      }
+    });
+  });
 });
