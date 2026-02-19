@@ -6,6 +6,7 @@ import * as helper from './adverts.helper';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AdvertsMapper } from './adverts.mapper';
 import { Category, Status } from '@prisma/client';
+import { unlink } from 'fs/promises';
 
 const prismaMock = {
   user: {
@@ -594,6 +595,89 @@ describe('AdvertsService', () => {
       await expect(
         service.update('a1', '123', { title: 'updated' }),
       ).rejects.toThrow('Database error');
+    });
+  });
+
+  describe('delete()', () => {
+    it('should delete advert and return mapped details', async () => {
+      const advert = {
+        id: 'a1',
+        ownerId: '123',
+        photos: [
+          { url: '/uploads/photo1.jpg' },
+          { url: '/uploads/photo2.jpg' },
+        ],
+        owner: {},
+        _count: { favorites: 0 },
+      };
+
+      prisma.advert.findUniqueOrThrow.mockResolvedValue(advert);
+      prisma.photo.deleteMany.mockResolvedValue({});
+      prisma.favorite.deleteMany.mockResolvedValue({});
+      prisma.advert.delete.mockResolvedValue({});
+
+      mapper.toAdvertDetailsEntity.mockReturnValue('mapped advert');
+
+      const result = await service.delete('a1', '123');
+
+      expect(helper.assertOwnership).toHaveBeenCalledWith(advert, '123');
+      expect(unlink).toHaveBeenCalledTimes(2);
+      expect(prisma.photo.deleteMany).toHaveBeenCalledWith({
+        where: { advertId: 'a1' },
+      });
+      expect(prisma.favorite.deleteMany).toHaveBeenCalledWith({
+        where: { advertId: 'a1' },
+      });
+      expect(prisma.advert.delete).toHaveBeenCalledWith({
+        where: { id: 'a1' },
+      });
+      expect(mapper.toAdvertDetailsEntity).toHaveBeenCalledWith(advert, {
+        isOwner: true,
+        isFavorite: false,
+      });
+      expect(result).toBe('mapped advert');
+    });
+
+    it('should continue even if unlink fails', async () => {
+      const advert = {
+        id: 'a1',
+        ownerId: '123',
+        photos: [{ url: '/uploads/photo1.jpg' }],
+        owner: {},
+        _count: { favorites: 0 },
+      };
+
+      prisma.advert.findUniqueOrThrow.mockResolvedValue(advert);
+
+      (unlink as jest.Mock).mockRejectedValue(
+        new Error('Failed to delete file'),
+      );
+
+      prisma.photo.deleteMany.mockResolvedValue({});
+      prisma.favorite.deleteMany.mockResolvedValue({});
+      prisma.advert.delete.mockResolvedValue({});
+
+      mapper.toAdvertDetailsEntity.mockReturnValue('mapped advert');
+
+      const result = await service.delete('a1', '123');
+
+      expect(unlink).toHaveBeenCalledTimes(1);
+      expect(result).toBe('mapped advert');
+    });
+
+    it('should throw id user is not the owner', async () => {
+      const advert = { id: 'a1', ownerId: '123' };
+
+      prisma.advert.findUniqueOrThrow.mockResolvedValue(advert);
+
+      (helper.assertOwnership as jest.Mock).mockImplementation(() => {
+        throw new Error('Not owner');
+      });
+
+      await expect(service.delete('a1', '345')).rejects.toThrow('Not owner');
+      expect(prisma.photo.deleteMany).not.toHaveBeenCalled();
+      expect(prisma.favorite.deleteMany).not.toHaveBeenCalled();
+      expect(prisma.advert.delete).not.toHaveBeenCalled();
     });
   });
 });
