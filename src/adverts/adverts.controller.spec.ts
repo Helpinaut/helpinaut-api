@@ -4,7 +4,6 @@ import { AdvertsService } from './adverts.service';
 import { PhotosService } from './services/photos.service';
 import { FavoritesService } from './services/favorites.service';
 import { Category } from '@prisma/client';
-import { FilesInterceptor } from '@nestjs/platform-express';
 
 const advertsMock = {
   create: jest.fn(),
