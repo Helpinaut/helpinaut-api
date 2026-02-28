@@ -10,7 +10,7 @@ export class ImageValidationPipe implements PipeTransform {
     }
 
     const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
-    const maxSize = UploadConfig.MAX_SIZE * 2024 * 2024;
+    const maxSize = UploadConfig.MAX_SIZE * 1024 * 1024;
 
     for (const file of files) {
       const fileExt = extname(file.originalname).toLowerCase();
