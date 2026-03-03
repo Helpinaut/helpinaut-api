@@ -1,4 +1,5 @@
 {
+  "globalSetup": "<rootDir>/global-setup.ts",
   "moduleFileExtensions": ["js", "json", "ts"],
   "moduleNameMapper": {
     "^src/(.*)$": "<rootDir>/../src/$1"
