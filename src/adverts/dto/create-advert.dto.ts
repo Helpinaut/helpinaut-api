@@ -1,13 +1,7 @@
-import {
-  ApiHideProperty,
-  ApiProperty,
-  ApiPropertyOptional,
-} from '@nestjs/swagger';
+import { ApiHideProperty, ApiProperty } from '@nestjs/swagger';
 import { Category } from '@prisma/client';
 import { Transform, Type } from 'class-transformer';
 import {
-  ArrayMaxSize,
-  IsArray,
   IsBoolean,
   IsEnum,
   IsNotEmpty,
@@ -32,7 +26,7 @@ export class CreateAdvertDto {
     description: `Title of the advert (max length ${AdvertConfig.MAX_TITLE} characters)`,
     example: 'Electrician available for home repairs',
   })
-  @Transform(({ value }) => value?.trim())
+  @Transform(({ value }) => value.trim())
   @IsNotEmpty()
   @IsString()
   @MinLength(5)

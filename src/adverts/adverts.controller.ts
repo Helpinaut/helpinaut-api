@@ -37,11 +37,13 @@ import { GetUser } from 'src/auth/decorators/get-user.decorator';
 import { DeleteFileOnErrorInterceptor } from 'src/utils/delete-file-on-error.interceptor';
 import { FilterAdvertDto } from './dto/filter-advert.dto';
 import { ImageValidationPipe } from './pipes/image-validation.pipe';
-import { UploadConfig } from 'src/config/upload.config';
+import { getUploadDir, UploadConfig } from 'src/config/upload.config';
 import { Category } from '@prisma/client';
 
 const storage = diskStorage({
-  destination: join(process.cwd(), String(UploadConfig.DIR)),
+  destination: (req, file, cb) => {
+    cb(null, join(process.cwd(), getUploadDir()));
+  },
   filename: (_, file, cb) =>
     cb(null, `${Date.now()}-${randomUUID()}${path.extname(file.originalname)}`),
 });
