@@ -191,7 +191,7 @@ export class AdvertsService {
    * Creates a new advert for the authenticated user.
    * @param createAdvertDto - Data transfer object containing advert details.
    * @param ownerId - ID of the user creating the advert.
-   * @param photoPaths - Array og photo URLs to attach to the advert.
+   * @param photoPaths - Array of photo URLs to attach to the advert.
    * @returns AdvertEntity representing the created advert.
    * @throws BadRequestException if user has no location set.
    */
@@ -209,6 +209,10 @@ export class AdvertsService {
 
     if (user.latitude == null || user.longitude == null) {
       throw new BadRequestException('User has no location set');
+    }
+
+    if (photoPaths.length > 10) {
+      throw new BadRequestException('A maximum of 10 photos is allowed');
     }
 
     const createdAdvert = await this.prisma.advert.create({

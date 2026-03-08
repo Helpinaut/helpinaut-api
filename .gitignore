@@ -18,6 +18,8 @@ lerna-debug.log*
 # Tests
 /coverage
 /.nyc_output
+/test/utils/not-an-image.txt
+/test/utils/oversized-image.png
 
 # IDEs and editors
 /.idea

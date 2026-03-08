@@ -23,9 +23,14 @@ export class PhotosService {
   async uploadPhoto(advertId: string, userId: string, photoPaths: string[]) {
     const advert = await this.prisma.advert.findUniqueOrThrow({
       where: { id: advertId },
+      include: { photos: true },
     });
 
     assertOwnership(advert, userId);
+
+    if (advert.photos.length + photoPaths.length > 10) {
+      throw new BadRequestException('A maximum of 10 photos is allowed');
+    }
 
     await this.prisma.photo.createMany({
       data: photoPaths.map((url) => ({ url, advertId })),

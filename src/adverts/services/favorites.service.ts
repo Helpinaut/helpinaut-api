@@ -151,7 +151,7 @@ export class FavoritesService {
 
     return this.mapper.toAdvertDetailsEntity(updatedAdvert, {
       isOwner: false,
-      isFavorite: true,
+      isFavorite: false,
     });
   }
 }

@@ -165,7 +165,7 @@ export class AdvertsController {
     },
   })
   @ApiConsumes('multipart/form-data')
-  @ApiOkResponse({ type: AdvertEntity })
+  @ApiCreatedResponse({ type: AdvertEntity })
   async uploadPhoto(
     @UploadedFiles(new ImageValidationPipe()) files: Express.Multer.File[],
     @Param('id') id: string,
@@ -201,7 +201,7 @@ export class AdvertsController {
   @Post(':id/favorites')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOkResponse({ type: AdvertEntity })
+  @ApiCreatedResponse({ type: AdvertEntity })
   async addFavorite(@Param('id') id: string, @GetUser('id') userId: string) {
     return this.favoritesService.addFavorite(id, userId);
   }
