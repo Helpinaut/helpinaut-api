@@ -1,98 +1,236 @@
 <p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
+  <img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" />
 </p>
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## Helpinaut API
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+Backend service built with **[NestJS]()**, **[Prisma]()**, and **[PostgreSQL]()**, designed to power a local services marketplace **[Helpinaut](https://github.com/Helpinaut/helpinaut-web)**.
 
-## Description
+Users can publish adverts requesting or offering services, upload photos, manage favorites, and search for specific adverts using filter params and approximate geolocation.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## 📌 Table of Contents
 
-## Project setup
+- Tech Stack
+- Features
+- Architecture Overview
+- API Overview
+  - Adverts
+  - Auth
+  - Users
+- Environment Setup
+- Run Locally
+- Running Tests
+- Documentation
+- Roadmap
+- Authors
 
-```bash
-$ npm install
+## Tech Stack
+
+- **Node.js** + **NestJS** (modular backend framework)
+- **Prisma ORM** (with PostgreSQL)
+- **JWT Authentication**
+- **Nominatim Geocoding API** (postal-code-based geolocation)
+- **Multer** (file uploads)
+- **Jest** (unit + E2E testing)
+- **Supertest** (HTTP testing)
+- **Swagger** (API documentation)
+
+## Features
+
+- User registration and login with JWT.
+- Create, update, delete and list adverts.
+- Update and delete account.
+- Upload up to 10 photos per advert.
+- Mark/unmark adverts as favorites.
+- Approximate geolocation based on postal code.
+- Distance-based and param-based advert filtering.
+- API versioning (`/api/v1/...`).
+- Full test suite (init + E2E).
+- Prisma migrations and seed.
+- Clean architecture with modules, services, controllers, DTOs, guards, pipes, etc.
+
+## Architecture Overview
+
+This projects follows a modular NestJS architecture:
+
+```
+src/
+├── adverts/
+│   ├── dto/
+│   ├── entities/
+│   ├── pipes/
+│   ├── services/
+│   │   ├── favorites.service.ts
+│   │   └── photos.service.ts
+│   ├── adverts.controller.ts
+│   ├── adverts.module.ts
+│   └── adverts.service.ts
+├── auth/
+│   ├── decorators/
+│   ├── dto/
+│   ├── guard/
+│   ├── interfaces/
+│   ├── strategies/
+│   ├── auth.controller.ts
+│   ├── auth.module.ts
+│   └── auth.service.ts
+├── config/
+├── prisma/
+│   ├── prisma.module.ts
+│   └── prisma.service.ts
+├── users/
+│   ├── dto/
+│   ├── entities/
+│   ├── services/
+│   │   └── geocoding.service.ts
+│   ├── users.controller.ts
+│   ├── users.module.ts
+│   └── users.service.ts
+├── utils/
+├── app.module.ts
+└── main.ts
 ```
 
-## Compile and run the project
+- **Controllers** expose REST endpoints.
+- **Services** contain business logic.
+- **DTOs** validate request payloads.
+- **PrismaService** handles database access.
+- **Pipes** validate uploaded image files.
+- **Guards** enforce authentication via JWT.
+
+Database schema is defined in `./prisma/schema.prisma`, including: `User`, `Advert`, `Photo`, `Favorite`, and `Categories` and `Status` enum values.
+
+## API Overview
+
+### Adverts
+
+- **`/api/v1/adverts`**
+  - `POST`: creates and returns new advert. **Requires authentication**.
+  - `GET`: returns adverts list. Supports pagination and filtering by advert params and distance.
+- **`/api/v1/adverts/categories`**
+  - `GET`: returns advert categories list.
+- **`/api/v1/adverts/:id`**
+  - `GET`: returns an existing advert.
+  - `PATCH`: updates an existing advert and returns it. **Requires authentication**.
+  - `DELETE`: deletes an existing advert. **Requires authentication**.
+- **`/api/v1/adverts/:id/photos`**
+  - `POST`: add photos to an existing advert and returns it updated. **Requires authentication**.
+- **`/api/v1/adverts/:id/photos/:photoId`**
+  - `DELETE`: deletes a photo from an existing advert and returns it updated. **Requires authentication**.
+- **`/api/v1/adverts/favorites/me`**
+  - `GET`: returns favorite adverts list. **Requires authentication**.
+- **`/api/v1/adverts/:id/favorites`**
+  - `POST`: mark an existing advert as favorite and returns it updated. **Requires authentication**.
+  - `DELETE`: unmark an existing advert as favorite and returns it updated. **Requires authentication**.
+
+### Auth
+
+- **`/api/v1/auth/login`**
+  - `POST`: returns access token if user credentials are valid.
+- **`/api/v1/auth/signup`**
+  - `POST`: creates and returns new user and access token.
+
+### Users
+
+- **`/api/v1/users/me`**
+  - `GET`: returns logged user. **Requires authentication**.
+  - `PATCH`: updates logged user credentials and returns it. **Requires authentication**.
+  - `DELETE`: deletes logged user. **Requires authentication**.
+- **`/api/v1/users/me/location`**
+  - `PATCH`: updates logged user location via postal code and returns it updated. **Requires authentication**.
+- **`/api/v1/users/:id`**
+  - `GET`: returns an existing user public profile.
+
+## Environment Setup
+
+1. Clone the project:
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+git clone https://github.com/Helpinaut/helpinaut-api.git
 ```
 
-## Run tests
+2. Go to the project directory:
+
+```bash
+cd helpinaut-api
+```
+
+3. Copy the environment variables from `.env.example` to `.env`:
+
+```bash
+cp .env.example .env
+```
+
+> ![IMPORTANT]
+> Make sure to check the new `.env` values to match your configuration.
+
+### Database Setup
+
+1. Install PostgreSQL
+2. Create a database:
+
+```sql
+CREATE DATABASE your_database;
+```
+
+3. Run migrations:
+
+```bash
+npx prisma migrate deploy
+```
+
+4. Seed the database:
+
+```bash
+npx prisma db seed
+```
+
+## Run Locally
+
+Install dependencies and start the server:
+
+```bash
+npm install
+npm run prisma:migrate
+npm run start:dev
+```
+
+The API will be available at `http://localhost:3000/api/v1`
+
+## Running Tests
+
+To run test, run the following command:
 
 ```bash
 # unit tests
-$ npm run test
+npm run test
 
-# e2e tests
-$ npm run test:e2e
+# unit tests coverage
+npm run test:cov
 
-# test coverage
-$ npm run test:cov
+# E2E tests
+npm run test:e2e
 ```
 
-## Deployment
+> ![IMPORTANT]
+> Make sure to create an `.env.test` file with a proper testing database before running E2E tests.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+These tests automatically reset the test database, run migrations, seed test data and validate all endpoints.
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## Documentation
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
+Swagger UI is available at `http://localhost:3000/api/v1/docs`.
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## Roadmap
 
-## Resources
+- [ ] PostGIS support for advanced geospatial queries
+- [ ] Repository pattern for better abstraction and practice
+- [ ] Prisma 7 migration
+- [ ] Notifications system
+- [ ] Password recovery and token expiration.
+- [ ] Multi-language support
+- [ ] Chat system
 
-Check out a few resources that may come in handy when working with NestJS:
+## Authors
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+[**@miguelferlez** Miguel Fernández](https://github.com/miguelferlez)
