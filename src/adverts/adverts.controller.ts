@@ -48,7 +48,7 @@ const storage = diskStorage({
     cb(null, `${Date.now()}-${randomUUID()}${path.extname(file.originalname)}`),
 });
 
-@Controller('adverts')
+@Controller({ path: 'adverts', version: '1' })
 @ApiTags('adverts')
 export class AdvertsController {
   constructor(

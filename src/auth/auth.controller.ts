@@ -5,7 +5,7 @@ import { LoginDto } from './dto/login.dto';
 import { SignUpDto } from './dto/signup.dto';
 import { UserEntity } from 'src/users/entities/user.entity';
 
-@Controller('auth')
+@Controller({ path: 'auth', version: '1' })
 @ApiTags('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}

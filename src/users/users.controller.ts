@@ -16,7 +16,7 @@ import { GetUser } from 'src/auth/decorators/get-user.decorator';
 import { UpdateLocationDto } from './dto/update-location.dto';
 import { OwnerDetailsEntity } from './entities/owner.entity';
 
-@Controller('users')
+@Controller({ path: 'users', version: '1' })
 @ApiTags('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
