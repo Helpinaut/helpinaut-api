@@ -49,7 +49,7 @@ async function bootstrap() {
 
   const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
 
-  SwaggerModule.setup('api/docs', app, swaggerDocument, {
+  SwaggerModule.setup('api/v1/docs', app, swaggerDocument, {
     customSiteTitle: 'Helpinaut API | Swagger',
   });
 
@@ -70,7 +70,7 @@ async function bootstrap() {
 
   await app.listen(port, () => {
     console.log(`Helpinaut API running in port ${port}`);
-    console.log(`Try me in http://localhost:${port}/api/docs`);
+    console.log(`Try me in http://localhost:${port}/api/v1/docs`);
   });
 }
 
