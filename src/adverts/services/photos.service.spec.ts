@@ -53,6 +53,7 @@ describe('PhotosService', () => {
         .mockResolvedValueOnce({
           id: 'a1',
           ownerId: '123',
+          photos: [],
         })
         .mockResolvedValueOnce({
           id: 'a1',
@@ -101,6 +102,7 @@ describe('PhotosService', () => {
       prisma.advert.findUniqueOrThrow.mockResolvedValue({
         id: 'a1',
         ownerId: '123',
+        photos: [],
       });
 
       prisma.photo.createMany.mockRejectedValue(new Error('Database error'));
