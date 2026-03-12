@@ -4,25 +4,25 @@
 
 ## Helpinaut API
 
-Backend service built with **[NestJS]()**, **[Prisma]()**, and **[PostgreSQL]()**, designed to power a local services marketplace **[Helpinaut](https://github.com/Helpinaut/helpinaut-web)**.
+Backend service built with **[NestJS](https://nestjs.com/)**, **[Prisma](https://www.prisma.io/)**, and **[PostgreSQL](https://www.postgresql.org/)**, designed to power a local services marketplace **[Helpinaut](https://github.com/Helpinaut/helpinaut-web)**.
 
 Users can publish adverts requesting or offering services, upload photos, manage favorites, and search for specific adverts using filter params and approximate geolocation.
 
-## 📌 Table of Contents
+## Table of Contents
 
-- Tech Stack
-- Features
-- Architecture Overview
-- API Overview
-  - Adverts
-  - Auth
-  - Users
-- Environment Setup
-- Run Locally
-- Running Tests
-- Documentation
-- Roadmap
-- Authors
+- [Tech Stack](#tech-stack)
+- [Features](#features)
+- [Architecture Overview](#architecture-overview)
+- [API Overview](#api-overview)
+  - [Adverts](#adverts)
+  - [Auth](#auth)
+  - [Users](#users)
+- [Environment Setup](#environment-setup)
+- [Run Locally](#run-locally)
+- [Running Tests](#running-tests)
+- [Documentation](#documentation)
+- [Roadmap](#roadmap)
+- [Authors](#authors)
 
 ## Tech Stack
 
@@ -170,7 +170,7 @@ cp .env.example .env
 2. Create a database:
 
 ```sql
-CREATE DATABASE your_database;
+CREATE DATABASE helpinaut;
 ```
 
 3. Run migrations:
