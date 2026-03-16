@@ -2,7 +2,7 @@
   <img src="https://cdn.discordapp.com/attachments/1428319464000327722/1483162823503642855/user-astronaut-solid.png?ex=69b99684&is=69b84504&hm=fe608bab6a256b21d363a78cb16f55b119240c1583c327efa163f1b3396977e9&" width="30%"/>
 </p>
 
-## Helpinaut API
+# Helpinaut API
 
 Backend service built with **[NestJS](https://nestjs.com/)**, **[Prisma](https://www.prisma.io/)**, and **[PostgreSQL](https://www.postgresql.org/)**, designed to power a local services marketplace **[Helpinaut](https://github.com/Helpinaut/helpinaut-web)**.
 
