@@ -147,15 +147,10 @@ Database schema is defined in `./prisma/schema.prisma`, including: `User`, `Adve
 
 ```bash
 git clone https://github.com/Helpinaut/helpinaut-api.git
-```
-
-2. Go to the project directory:
-
-```bash
 cd helpinaut-api
 ```
 
-3. Copy the environment variables from `.env.example` to `.env`:
+2. Copy the environment variables from `.env.example` to `.env`:
 
 ```bash
 cp .env.example .env
@@ -164,26 +159,28 @@ cp .env.example .env
 > ![IMPORTANT]
 > Make sure to check the new `.env` values to match your configuration.
 
-### Database Setup
+## Running with Docker
 
-1. Install PostgreSQL
-2. Create a database:
-
-```sql
-CREATE DATABASE helpinaut;
-```
-
-3. Run migrations:
+1. Create the Docker environment file:
 
 ```bash
-npx prisma migrate deploy
+cp .env.example .env.docker
 ```
 
-4. Seed the database:
+Update the database URL:
 
 ```bash
-npx prisma db seed
+DATABASE_URL="postgresql://helpinaut:helpinaut@db:5432/helpinaut"
+NODE_ENV=production
 ```
+
+2. Build and start the containers:
+
+```bash
+docker compose up --build
+```
+
+This will build the API starting PostgreSQL 16, run prisma migrations, database seeds and NestJS server in production mode.
 
 ## Run Locally
 
