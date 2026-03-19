@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://cdn.discordapp.com/attachments/1428319464000327722/1483190793748611254/New_Project2.png?ex=69b9b091&is=69b85f11&hm=6122c5829427a7fbc1bade7a6286f108f87f3f8f526622c531771eb09f01f169&" width="50%" alt="Helpinaut API"/>
+  <img src="https://github.com/user-attachments/assets/5313b8ad-43ec-4321-9920-1ea267fec60d" width="50%" alt="Helpinaut API"/>
 </p>
 
 Backend service built with **[NestJS](https://nestjs.com/)**, **[Prisma](https://www.prisma.io/)**, and **[PostgreSQL](https://www.postgresql.org/)**, designed to power a local services marketplace **[Helpinaut](https://github.com/Helpinaut/helpinaut-web)**.
