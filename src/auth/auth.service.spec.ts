@@ -89,9 +89,12 @@ describe('AuthService', () => {
       await expect(service.login(dto)).rejects.toBeInstanceOf(
         UnauthorizedException,
       );
-      await expect(service.login(dto)).rejects.toThrow(
-        'Invalid email or password',
-      );
+      await expect(service.login(dto)).rejects.toMatchObject({
+        response: {
+          code: 'AUTH_INVALID_CREDENTIALS',
+          message: 'Invalid email or password',
+        },
+      });
     });
 
     it('should throw UnauthorizedException if user does not exist', async () => {
@@ -104,7 +107,12 @@ describe('AuthService', () => {
 
       await expect(
         service.login({ email: 'unknown@email.com', password: '12345678' }),
-      ).rejects.toThrow('Invalid email or password');
+      ).rejects.toMatchObject({
+        response: {
+          code: 'AUTH_INVALID_CREDENTIALS',
+          message: 'Invalid email or password',
+        },
+      });
     });
 
     it('should throw if login fails', async () => {

@@ -61,7 +61,10 @@ describe('AuthController (e2e)', () => {
         .send({ email: 'wrong@email.com', password: '12345678' });
 
       expect(res.status).toBe(401);
-      expect(res.body.message).toContain('Invalid email or password');
+      expect(res.body).toMatchObject({
+        code: 'AUTH_INVALID_CREDENTIALS',
+        message: 'Invalid email or password',
+      });
     });
 
     it('should not login with wrong password', async () => {
@@ -70,7 +73,10 @@ describe('AuthController (e2e)', () => {
         .send({ email: 'new.user@email.com', password: 'wrong-password' });
 
       expect(res.status).toBe(401);
-      expect(res.body.message).toContain('Invalid email or password');
+      expect(res.body).toMatchObject({
+        code: 'AUTH_INVALID_CREDENTIALS',
+        message: 'Invalid email or password',
+      });
     });
   });
 });
