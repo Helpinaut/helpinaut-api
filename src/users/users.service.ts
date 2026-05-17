@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { unlink } from 'fs/promises';
 import path from 'path';
@@ -11,6 +11,7 @@ import { GeocodingService } from './services/geocoding.service';
 import { FavoriteEntity } from 'src/adverts/entities/favorite.entity';
 import { UserEntity } from './entities/user.entity';
 import { OwnerDetailsEntity } from './entities/owner.entity';
+import { ApiErrorsConfig } from 'src/config/api.errors.config';
 
 @Injectable()
 export class UsersService {
@@ -35,13 +36,14 @@ export class UsersService {
       },
     });
 
-    if (existing) {
-      throw new BadRequestException(
-        existing.email === email
-          ? 'Email is already in use'
-          : 'Username is already in use',
-      );
+    if (!existing) {
+      return;
     }
+
+    throw new ConflictException({
+      ...ApiErrorsConfig.UNIQUE_FIELD_CONFLICT,
+      field: existing.email === email ? 'email' : 'username',
+    });
   }
 
   /**

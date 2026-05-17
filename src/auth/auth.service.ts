@@ -6,6 +6,7 @@ import { UsersService } from 'src/users/users.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { LoginDto } from './dto/login.dto';
 import { SignUpDto } from './dto/signup.dto';
+import { ApiErrorsConfig } from 'src/config/api.errors.config';
 
 @Injectable()
 export class AuthService {
@@ -46,7 +47,9 @@ export class AuthService {
       );
 
       if (!isPasswordValid) {
-        throw new UnauthorizedException('Invalid email or password');
+        throw new UnauthorizedException(
+          ApiErrorsConfig.AUTH_INVALID_CREDENTIALS,
+        );
       }
 
       return { accessToken: this.generateToken(foundUser) };
@@ -55,7 +58,9 @@ export class AuthService {
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === 'P2025'
       ) {
-        throw new UnauthorizedException('Invalid email or password');
+        throw new UnauthorizedException(
+          ApiErrorsConfig.AUTH_INVALID_CREDENTIALS,
+        );
       }
 
       throw error;
@@ -68,17 +73,13 @@ export class AuthService {
    * @returns JWT for immediate authentication.
    */
   async signup(user: SignUpDto) {
-    try {
-      const newUser = await this.usersService.create({
-        email: user.email,
-        username: user.username,
-        password: user.password,
-        postalCode: user.postalCode,
-      });
+    const newUser = await this.usersService.create({
+      email: user.email,
+      username: user.username,
+      password: user.password,
+      postalCode: user.postalCode,
+    });
 
-      return { user: newUser, accessToken: this.generateToken(newUser) };
-    } catch (error) {
-      throw error;
-    }
+    return { user: newUser, accessToken: this.generateToken(newUser) };
   }
 }

@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { BaseExceptionFilter } from '@nestjs/core';
 import { Prisma } from '@prisma/client';
+import { ApiErrorsConfig } from 'src/config/api.errors.config';
 
 /**
  * Global filter that converts Prisma error into HTTP exceptions.
@@ -20,19 +21,40 @@ export class PrismaClientExceptionFilter extends BaseExceptionFilter {
         // Unique constraint violations
         const target = (exception.meta?.target ?? []) as string[];
         const field = target[0] ?? 'Field';
-        throw new ConflictException(`${field} is already in use`);
+
+        super.catch(
+          new ConflictException({
+            ...ApiErrorsConfig.UNIQUE_FIELD_CONFLICT,
+            field,
+          }),
+          host,
+        );
       }
       case 'P2003': {
         // Foreign key constraint violation
-        throw new UnprocessableEntityException('Related entity does not exist');
+        super.catch(
+          new UnprocessableEntityException(
+            ApiErrorsConfig.RELATED_ENTITY_NOT_FOUND,
+          ),
+          host,
+        );
       }
       case 'P2025': {
         // Non-existing object
-        throw new NotFoundException('Resource not found');
+        super.catch(
+          new NotFoundException(ApiErrorsConfig.RESOURCE_NOT_FOUND),
+          host,
+        );
       }
       default:
         console.error('Unhandled Prisma error:', exception);
-        throw new InternalServerErrorException('Internal server error');
+
+        super.catch(
+          new InternalServerErrorException(
+            ApiErrorsConfig.INTERNAL_SERVER_ERROR,
+          ),
+          host,
+        );
     }
   }
 }
