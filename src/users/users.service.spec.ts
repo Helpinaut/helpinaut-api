@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UsersService } from './users.service';
 import { GeocodingService } from './services/geocoding.service';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, ConflictException } from '@nestjs/common';
 import { OwnerDetailsEntity } from './entities/owner.entity';
 import { AdvertEntity } from 'src/adverts/entities/advert.entity';
 import { UserEntity } from './entities/user.entity';
@@ -91,7 +91,7 @@ describe('UsersService', () => {
       expect(result.id).toBe('123');
     });
 
-    it('should throw BadRequestError if email is already in use', async () => {
+    it('should throw ConflictException if email is already in use', async () => {
       prisma.user.findFirst.mockResolvedValue({
         id: 'existing',
         email: 'user@email.com',
@@ -106,14 +106,18 @@ describe('UsersService', () => {
       };
 
       await expect(service.create(dto)).rejects.toBeInstanceOf(
-        BadRequestException,
+        ConflictException,
       );
-      await expect(service.create(dto)).rejects.toThrow(
-        'Email is already in use',
-      );
+      await expect(service.create(dto)).rejects.toMatchObject({
+        response: {
+          code: 'UNIQUE_FIELD_CONFLICT',
+          message: 'Field is already in use',
+          field: 'email',
+        },
+      });
     });
 
-    it('should throw BadRequestError if username is already in use', async () => {
+    it('should throw ConflictException if username is already in use', async () => {
       prisma.user.findFirst.mockResolvedValue({
         id: 'existing',
         email: 'other@email.com',
@@ -128,11 +132,15 @@ describe('UsersService', () => {
       };
 
       await expect(service.create(dto)).rejects.toBeInstanceOf(
-        BadRequestException,
+        ConflictException,
       );
-      await expect(service.create(dto)).rejects.toThrow(
-        'Username is already in use',
-      );
+      await expect(service.create(dto)).rejects.toMatchObject({
+        response: {
+          code: 'UNIQUE_FIELD_CONFLICT',
+          message: 'Field is already in use',
+          field: 'username',
+        },
+      });
     });
   });
 

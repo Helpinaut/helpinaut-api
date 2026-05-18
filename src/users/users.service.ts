@@ -22,7 +22,7 @@ export class UsersService {
 
   /**
    * Ensures thar email and username are unique before creating a user.
-   * @throws BadRequestException if either already exists.
+   * @throws ConflictException if either already exists.
    */
   private async assertUniqueCredentials(
     email?: string,
@@ -50,7 +50,7 @@ export class UsersService {
    * Creates a new user with hashed password.
    * Validates email and username uniqueness before creation.
    * @param createUserDto - User registration data.
-   * @throws BadRequestException if email or username already exists.
+   * @throws ConflictException if email or username already exists.
    * @returns UserEntity representing the created user.
    */
   async create(createUserDto: CreateUserDto) {
