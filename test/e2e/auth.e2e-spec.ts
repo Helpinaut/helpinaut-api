@@ -39,7 +39,7 @@ describe('AuthController (e2e)', () => {
         postalCode: '41001',
       });
 
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(409);
       expect(res.body.message).toContain('already in use');
     });
   });
