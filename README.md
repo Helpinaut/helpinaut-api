@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/5313b8ad-43ec-4321-9920-1ea267fec60d" width="50%" alt="Helpinaut API"/>
+  <img src="https://github.com/user-attachments/assets/648a7c37-e72f-4369-b834-14e1b3c918a5" width="50%" alt="Helpinaut API" />
 </p>
 
 Backend service built with **[NestJS](https://nestjs.com/)**, **[Prisma](https://www.prisma.io/)**, and **[PostgreSQL](https://www.postgresql.org/)**, designed to power a local services marketplace **[Helpinaut](https://github.com/Helpinaut/helpinaut-web)**.
